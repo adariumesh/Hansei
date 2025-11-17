@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HANSEI - Voice Memory System</title>
+    <script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.2/standalone/umd/vis-network.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            margin-bottom: 20px;
+            color: #667eea;
+            font-size: 1.5em;
+        }
+
+        /* Voice Input Section */
+        .voice-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .record-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px;
+            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto;
+            cursor: pointer;
+            font-size: 2em;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .record-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .record-btn.recording {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .status {
+            text-align: center;
+            font-size: 1.1em;
+            color: #666;
+            min-height: 30px;
+        }
+
+        .status.active {
+            color: #f5576c;
+            font-weight: bold;
+        }
+
+        .text-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Graph Section */
+        #graph {
+            width: 100%;
+            height: 500px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: #fafafa;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .search-btn:hover {
+            background: #764ba2;
+        }
+
+        /* Results Section */
+        .results {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .result-card p {
+            color: #666;
+            font-size: 0.95em;
+            margin-bottom: 8px;
+        }
+
+        .entities {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .entity-tag {
+            background: #667eea;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.85em;
+        }
+
+        .graph-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
+        .error {
+            background: #fee;
+            border-left: 4px solid #f55;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            color: #c33;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⏺ HANSEI</h1>
+            <p>Your AI-Powered Memory & Knowledge Graph</p>
+        </header>
+
+        <div class="main-grid">
+            <!-- Voice Input Section -->
+            <div class="card">
+                <h2>🎤 Capture Memory</h2>
+                <div class="voice-controls">
+                    <button class="record-btn" id="recordBtn" title="Click to record">🎙️</button>
+                    <div class="status" id="status">Ready to record</div>
+                    
+                    <div style="text-align: center; margin: 15px 0; color: #999;">or</div>
+                    
+                    <textarea 
+                        class="text-input" 
+                        id="textInput" 
+                        placeholder="Type your thoughts here..."
+                    ></textarea>
+                    
+                    <button class="submit-btn" id="submitBtn">💾 Save to Memory</button>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <h3 style="margin-bottom: 15px; color: #667eea;">Recent Entries</h3>
+                    <div id="recentEntries"></div>
+                </div>
+            </div>
+
+            <!-- Graph Visualization Section -->
+            <div class="card">
+                <h2>🧠 Knowledge Graph</h2>
+                <div class="search-box">
+                    <input 
+                        type="text" 
+                        class="search-input" 
+                        id="searchInput" 
+                        placeholder="Search your memories..."
+                        value="health goals running"
+                    />
+                    <button class="search-btn" id="searchBtn">🔍 Search</button>
+                </div>
+                
+                <div id="graph"></div>
+                
+                <div class="graph-stats">
+                    <div class="stat">
+                        <div class="stat-value" id="nodeCount">0</div>
+                        <div class="stat-label">Entities</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="edgeCount">0</div>
+                        <div class="stat-label">Connections</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="memoryCount">0</div>
+                        <div class="stat-label">Memories</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="card">
+            <h2>📊 Search Results</h2>
+            <div class="results" id="results">
+                <div class="loading">Search your memories to see results...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE = 'https://svc-01ka9tm46dtzqcvz88z5v3c9kc.01ka41m1warcc7s5zveqw1tt3z.lmapp.run';
+        const USER_ID = 'demo_user_' + Date.now();
+
+        // State
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let network = null;
+
+        // Initialize graph
+        function initGraph() {
+            const container = document.getElementById('graph');
+            const data = {
+                nodes: new vis.DataSet([]),
+                edges: new vis.DataSet([])
+            };
+            const options = {
+                nodes: {
+                    shape: 'dot',
+                    size: 20,
+                    font: {
+                        size: 14,
+                        color: '#333'
+                    },
+                    borderWidth: 2,
+                    shadow: true
+                },
+                edges: {
+                    width: 2,
+                    arrows: 'to',
+                    smooth: {
+                        type: 'continuous'
+                    },
+                    font: {
+                        size: 12,
+                        align: 'middle'
+                    }
+                },
+                physics: {
+                    stabilization: true,
+                    barnesHut: {
+                        gravitationalConstant: -2000,
+                        springConstant: 0.001,
+                        springLength: 200
+                    }
+                },
+                interaction: {
+                    hover: true,
+                    tooltipDelay: 100
+                }
+            };
+            network = new vis.Network(container, data, options);
+        }
+
+        // Voice Recording
+        document.getElementById('recordBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('recordBtn');
+            const status = document.getElementById('status');
+
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = (e) => {
+                        audioChunks.push(e.data);
+                    };
+
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        await uploadVoice(audioBlob);
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+
+                    mediaRecorder.start();
+                    btn.classList.add('recording');
+                    btn.textContent = '⏹️';
+                    status.textContent = 'Recording... Click to stop';
+                    status.classList.add('active');
+                } catch (err) {
+                    status.textContent = 'Microphone access denied';
+                    console.error('Error accessing microphone:', err);
+                }
+            } else {
+                mediaRecorder.stop();
+                btn.classList.remove('recording');
+                btn.textContent = '🎙️';
+                status.textContent = 'Processing...';
+            }
+        });
+
+        // Upload Voice
+        async function uploadVoice(audioBlob) {
+            const status = document.getElementById('status');
+            try {
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'recording.wav');
+                formData.append('audio_format', 'wav');
+                formData.append('user_id', USER_ID);
+
+                const response = await fetch(`${API_BASE}/api/voice/ingest`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    status.textContent = '✅ Voice processed successfully!';
+                    status.classList.remove('active');
+                    addRecentEntry(result.transcript, result.extracted);
+                    setTimeout(() => {
+                        status.textContent = 'Ready to record';
+                    }, 3000);
+                    // Auto-refresh graph
+                    searchGraph();
+                } else {
+                    status.textContent = '❌ Error: ' + (result.error || 'Unknown error');
+                    status.classList.remove('active');
+                }
+            } catch (err) {
+                status.textContent = '❌ Upload failed';
+                status.classList.remove('active');
+                console.error('Upload error:', err);
+            }
+        }
+
+        // Text Submission
+        document.getElementById('submitBtn').addEventListener('click', async () => {
+            const textInput = document.getElementById('textInput');
+            const text = textInput.value.trim();
+            
+            if (!text) return;
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Processing...';
+
+            try {
+                const response = await fetch(`${API_BASE}/infer`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: text,
+                        user_id: USER_ID
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    textInput.value = '';
+                    addRecentEntry(text, result.extracted);
+                    btn.textContent = '✅ Saved!';
+                    setTimeout(() => {
+                        btn.textContent = '💾 Save to Memory';
+                        btn.disabled = false;
+                    }, 2000);
+                    // Auto-refresh graph
+                    searchGraph();
+                } else {
+                    btn.textContent = '❌ Error';
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                btn.textContent = '❌ Failed';
+                btn.disabled = false;
+                console.error('Submit error:', err);
+            }
+        });
+
+        // Add to recent entries
+        function addRecentEntry(content, extracted) {
+            const container = document.getElementById('recentEntries');
+            const entry = document.createElement('div');
+            entry.className = 'result-card';
+            entry.style.marginBottom = '10px';
+            
+            const entities = extracted.entities || [];
+            const entitiesHtml = entities.map(e => 
+                `<span class="entity-tag">${e.type}: ${e.content}</span>`
+            ).join('');
+
+            entry.innerHTML = `
+                <p style="margin-bottom: 10px;"><strong>${content.substring(0, 100)}${content.length > 100 ? '...' : ''}</strong></p>
+                <div class="entities">${entitiesHtml}</div>
+            `;
+            
+            container.insertBefore(entry, container.firstChild);
+            
+            // Keep only last 3 entries
+            while (container.children.length > 3) {
+                container.removeChild(container.lastChild);
+            }
+        }
+
+        // Search and visualize graph
+        document.getElementById('searchBtn').addEventListener('click', searchGraph);
+
+        async function searchGraph() {
+            const query = document.getElementById('searchInput').value.trim() || 'all memories';
+            const resultsDiv = document.getElementById('results');
+            
+            resultsDiv.innerHTML = '<div class="loading">Searching...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/graph?query=${encodeURIComponent(query)}&limit=50&user_id=${USER_ID}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    displayGraph(result.graph);
+                    displayResults(result.rawResults);
+                } else {
+                    resultsDiv.innerHTML = `<div class="error">Search failed: ${result.error}</div>`;
+                }
+            } catch (err) {
+                resultsDiv.innerHTML = `<div class="error">Network error: ${err.message}</div>`;
+                console.error('Search error:', err);
+            }
+        }
+
+        // Display graph
+        function displayGraph(graphData) {
+            const nodes = graphData.nodes.map(node => ({
+                id: node.id,
+                label: node.label,
+                title: `Type: ${node.type}\nWeight: ${node.weight}`,
+                color: getNodeColor(node.type),
+                size: 20 + (node.weight * 30)
+            }));
+
+            const edges = graphData.edges.map((edge, idx) => ({
+                id: idx,
+                from: edge.source,
+                to: edge.target,
+                label: edge.type,
+                title: edge.type
+            }));
+
+            network.setData({ nodes, edges });
+            
+            // Update stats
+            document.getElementById('nodeCount').textContent = nodes.length;
+            document.getElementById('edgeCount').textContent = edges.length;
+            document.getElementById('memoryCount').textContent = graphData.metadata?.totalNodes || 0;
+        }
+
+        // Get color by entity type
+        function getNodeColor(type) {
+            const colors = {
+                'goal': '#667eea',
+                'habit': '#f093fb',
+                'person': '#4facfe',
+                'project': '#43e97b',
+                'emotion': '#fa709a',
+                'object': '#ffd89b'
+            };
+            return colors[type] || '#999';
+        }
+
+        // Display search results
+        function displayResults(results) {
+            const container = document.getElementById('results');
+            
+            if (!results || results.length === 0) {
+                container.innerHTML = '<div class="loading">No results found. Try a different query!</div>';
+                return;
+            }
+
+            container.innerHTML = results.map(r => `
+                <div class="result-card">
+                    <h3>Memory Match</h3>
+                    <p><strong>Score:</strong> ${(r.score * 100).toFixed(1)}%</p>
+                    <p>${r.text || r.content || 'No content available'}</p>
+                </div>
+            `).join('');
+        }
+
+        // Initialize
+        initGraph();
+        
+        // Auto-search on load
+        setTimeout(() => {
+            document.getElementById('searchBtn').click();
+        }, 500);
+    </script>
+</body>
+</html>

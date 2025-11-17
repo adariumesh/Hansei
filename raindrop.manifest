@@ -1,0 +1,10 @@
+
+application "hansei-memory-core" {
+  smartmemory "agent-memory" {}
+  service "hansei-intelligence-processor" {
+    visibility = "public"
+  }
+  mcp_service "hansei-intel-mcp" {
+    visibility = "protected"
+  }
+}

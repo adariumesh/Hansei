@@ -1,0 +1,1511 @@
+Last login: Mon Nov 17 10:33:20 on ttys003
+(base) adariprasad@Adaris-MacBook-Air HANSEI % cd ~/.raindrop/01ka9b0gcv5te6wee7dsfavvtc/
+(base) adariprasad@Adaris-MacBook-Air 01ka9b0gcv5te6wee7dsfavvtc % ls -f
+.			prd.md			tentative_manifest.txt
+..			specifications		architecture
+(base) adariprasad@Adaris-MacBook-Air 01ka9b0gcv5te6wee7dsfavvtc % ls
+architecture		prd.md			specifications		tentative_manifest.txt
+(base) adariprasad@Adaris-MacBook-Air 01ka9b0gcv5te6wee7dsfavvtc % raindrop mcp status
+❌ Raindrop MCP integration is not configured
+💡 Run `raindrop mcp install-claude` to set it up
+
+No MCP servers configured
+(base) adariprasad@Adaris-MacBook-Air 01ka9b0gcv5te6wee7dsfavvtc % cd ~/.raindrop/01ka9b0gcv5te6wee7dsfavvtc/
+(base) adariprasad@Adaris-MacBook-Air 01ka9b0gcv5te6wee7dsfavvtc % raindrop auth list
+┌────────────────────────────────┬──────────────────────────────┬───────────────────┬────────────┐
+│ (index)                        │ organizationName             │ userEmail         │ isSelected │
+├────────────────────────────────┼──────────────────────────────┼───────────────────┼────────────┤
+│ org_01KA41M1WARCC7S5ZVEQW1TT3Z │ "umeshka's Personal Account" │ 'umeshka@umd.edu' │ true       │
+└────────────────────────────────┴──────────────────────────────┴───────────────────┴────────────┘
+(base) adariprasad@Adaris-MacBook-Air 01ka9b0gcv5te6wee7dsfavvtc % raindrop mcp status
+❌ Raindrop MCP integration is not configured
+💡 Run `raindrop mcp install-claude` to set it up
+
+No MCP servers configured
+(base) adariprasad@Adaris-MacBook-Air 01ka9b0gcv5te6wee7dsfavvtc % ls src/
+ls: src/: No such file or directory
+(base) adariprasad@Adaris-MacBook-Air 01ka9b0gcv5te6wee7dsfavvtc % cd ~
+(base) adariprasad@Adaris-MacBook-Air ~ % cd HANSEI
+cd: no such file or directory: HANSEI
+(base) adariprasad@Adaris-MacBook-Air ~ % cd weapon
+(base) adariprasad@Adaris-MacBook-Air weapon % cd Hansai
+cd: no such file or directory: Hansai
+(base) adariprasad@Adaris-MacBook-Air weapon % ls
+aarambh		Books		Bridgefolio	HANSEI		Kaggle		Promptheos
+AIAG		BOT		Competitions	Job		kaggle_new	UMD
+(base) adariprasad@Adaris-MacBook-Air weapon % cd HANSEI
+(base) adariprasad@Adaris-MacBook-Air HANSEI % ls -f
+.				HANSEI_InitialDraft.docx	.claude
+..				.DS_Store			hansei-memory-core
+rules.pdf			overview.pdf
+Claude Code Summary		hansei
+(base) adariprasad@Adaris-MacBook-Air HANSEI % cd hansei
+(base) adariprasad@Adaris-MacBook-Air hansei % ls
+dist			package-lock.json	raindrop.manifest	src
+node_modules		package.json		RAINDROP.md		tsconfig.json
+(base) adariprasad@Adaris-MacBook-Air hansei % ls src/
+_app			batch-processor		entity-resolver		memory-core		shared
+api-gateway		document-analyzer	insight-generator	pattern-detector	sql
+audio-processor		document-processor	intelligence-pipeline	search-engine		voice-processor
+(base) adariprasad@Adaris-MacBook-Air hansei % cd ..
+(base) adariprasad@Adaris-MacBook-Air HANSEI % cd hansei
+(base) adariprasad@Adaris-MacBook-Air hansei % raindrop build
+Develop applications on Raindrop
+
+USAGE
+  $ raindrop build COMMAND
+
+TOPICS
+  build env     get an env var/secret
+  build tools   validate a LiquidMetal.AI raindrop.manifest
+  build workos  Delete all WorkOS integration state from the organization
+
+COMMANDS
+  build branch          branch a Raindrop application
+  build checkout        switch the current context to a specific version
+  build clone           clone a LiquidMetal.AI project
+  build delete          delete Raindrop applications
+  build deploy          deploy a Raindrop application
+  build find            find resources in Raindrop
+  build generate        (re)generate all code for a LiquidMetal.AI project
+  build init            start a new LiquidMetal.AI project
+  build init-workspace  initialize a new npm workspace for Raindrop applications
+  build list            list Raindrop catalog resources
+  build sandbox         mark a version as sandboxed in the Raindrop catalog
+  build start           start a Raindrop application
+  build status          show the status of an application in Raindrop
+  build stop            stop a Raindrop application
+  build unsandbox       mark a version as unsandboxed in the Raindrop catalog
+  build upload          build and validate a LiquidMetal.AI project
+  build validate        build and validate a LiquidMetal.AI project
+
+(base) adariprasad@Adaris-MacBook-Air hansei % raindrop build validate
+Using @liquidmetal-ai/raindrop-framework version 0.10.0
+Running type check...
+src/api-gateway/index.ts:6:3 - error TS2305: Module '"./utils.js"' has no exported member 'createHealthRoutes'.
+
+6   createHealthRoutes,
+    ~~~~~~~~~~~~~~~~~~
+
+src/api-gateway/index.ts:7:3 - error TS2305: Module '"./utils.js"' has no exported member 'createMemoryRoutes'.
+
+7   createMemoryRoutes,
+    ~~~~~~~~~~~~~~~~~~
+
+src/api-gateway/index.ts:8:3 - error TS2305: Module '"./utils.js"' has no exported member 'createIntelligenceRoutes'.
+
+8   createIntelligenceRoutes,
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+
+src/api-gateway/index.ts:9:3 - error TS2305: Module '"./utils.js"' has no exported member 'createSearchRoutes'.
+
+9   createSearchRoutes,
+    ~~~~~~~~~~~~~~~~~~
+
+src/api-gateway/index.ts:10:3 - error TS2305: Module '"./utils.js"' has no exported member 'createProcessingRoutes'.
+
+10   createProcessingRoutes
+     ~~~~~~~~~~~~~~~~~~~~~~
+
+src/api-gateway/index.ts:13:3 - error TS2305: Module '"./utils.js"' has no exported member 'errorHandler'.
+
+13   errorHandler,
+     ~~~~~~~~~~~~
+
+src/api-gateway/index.ts:14:3 - error TS2305: Module '"./utils.js"' has no exported member 'requestLogger'.
+
+14   requestLogger,
+     ~~~~~~~~~~~~~
+
+src/api-gateway/index.ts:15:3 - error TS2305: Module '"./utils.js"' has no exported member 'authenticateRequest'.
+
+15   authenticateRequest,
+     ~~~~~~~~~~~~~~~~~~~
+
+src/api-gateway/index.ts:16:3 - error TS2305: Module '"./utils.js"' has no exported member 'createStandardResponse'.
+
+16   createStandardResponse
+     ~~~~~~~~~~~~~~~~~~~~~~
+
+src/audio-processor/index.ts:10:13 - error TS2339: Property 'event' does not exist on type 'Message<BucketEventNotification>'.
+
+10     const { event } = message;
+               ~~~~~
+
+src/audio-processor/index.ts:42:54 - error TS2551: Property 'objectKey' does not exist on type 'BucketEventNotification'. Did you mean 'object'?
+
+42       console.log(`Processing uploaded file: ${event.objectKey}`);
+                                                        ~~~~~~~~~
+
+  node_modules/@liquidmetal-ai/raindrop-framework/dist/bucket.d.ts:159:5
+    159     object: {
+            ~~~~~~
+    'object' is declared here.
+
+src/audio-processor/index.ts:46:20 - error TS2551: Property 'objectKey' does not exist on type 'BucketEventNotification'. Did you mean 'object'?
+
+46         key: event.objectKey,
+                      ~~~~~~~~~
+
+  node_modules/@liquidmetal-ai/raindrop-framework/dist/bucket.d.ts:159:5
+    159     object: {
+            ~~~~~~
+    'object' is declared here.
+
+src/audio-processor/index.ts:47:21 - error TS2339: Property 'size' does not exist on type 'BucketEventNotification'.
+
+47         size: event.size,
+                       ~~~~
+
+src/audio-processor/index.ts:48:28 - error TS2339: Property 'contentType' does not exist on type 'BucketEventNotification'.
+
+48         contentType: event.contentType,
+                              ~~~~~~~~~~~
+
+src/audio-processor/index.ts:80:17 - error TS2339: Property 'contentType' does not exist on type 'BucketEventNotification'.
+
+80       if (event.contentType?.startsWith('image/')) {
+                   ~~~~~~~~~~~
+
+src/audio-processor/index.ts:85:37 - error TS2339: Property 'contentType' does not exist on type 'BucketEventNotification'.
+
+85       if (this.isDocumentType(event.contentType)) {
+                                       ~~~~~~~~~~~
+
+src/audio-processor/index.ts:110:51 - error TS2551: Property 'objectKey' does not exist on type 'BucketEventNotification'. Did you mean 'object'?
+
+110     console.log(`Processing deleted file: ${event.objectKey}`);
+                                                      ~~~~~~~~~
+
+  node_modules/@liquidmetal-ai/raindrop-framework/dist/bucket.d.ts:159:5
+    159     object: {
+            ~~~~~~
+    'object' is declared here.
+
+src/audio-processor/index.ts:142:55 - error TS2551: Property 'objectKey' does not exist on type 'BucketEventNotification'. Did you mean 'object'?
+
+142     console.log(`Processing multipart upload: ${event.objectKey}`);
+                                                          ~~~~~~~~~
+
+  node_modules/@liquidmetal-ai/raindrop-framework/dist/bucket.d.ts:159:5
+    159     object: {
+            ~~~~~~
+    'object' is declared here.
+
+src/audio-processor/index.ts:158:59 - error TS2551: Property 'objectKey' does not exist on type 'BucketEventNotification'. Did you mean 'object'?
+
+158     console.log(`Triggering image processing for: ${event.objectKey}`);
+                                                              ~~~~~~~~~
+
+  node_modules/@liquidmetal-ai/raindrop-framework/dist/bucket.d.ts:159:5
+    159     object: {
+            ~~~~~~
+    'object' is declared here.
+
+src/audio-processor/index.ts:181:62 - error TS2551: Property 'objectKey' does not exist on type 'BucketEventNotification'. Did you mean 'object'?
+
+181     console.log(`Triggering document processing for: ${event.objectKey}`);
+                                                                 ~~~~~~~~~
+
+  node_modules/@liquidmetal-ai/raindrop-framework/dist/bucket.d.ts:159:5
+    159     object: {
+            ~~~~~~
+    'object' is declared here.
+
+src/audio-processor/index.ts:226:26 - error TS2339: Property 'contentType' does not exist on type 'BucketEventNotification'.
+
+226       const type = event.contentType || 'unknown';
+                             ~~~~~~~~~~~
+
+src/audio-processor/index.ts:251:15 - error TS2339: Property 'size' does not exist on type 'BucketEventNotification'.
+
+251     if (event.size && event.size > maxSize) {
+                  ~~~~
+
+src/audio-processor/index.ts:251:29 - error TS2339: Property 'size' does not exist on type 'BucketEventNotification'.
+
+251     if (event.size && event.size > maxSize) {
+                                ~~~~
+
+src/audio-processor/index.ts:264:15 - error TS2339: Property 'contentType' does not exist on type 'BucketEventNotification'.
+
+264     if (event.contentType && !allowedTypes.includes(event.contentType)) {
+                  ~~~~~~~~~~~
+
+src/audio-processor/index.ts:264:59 - error TS2339: Property 'contentType' does not exist on type 'BucketEventNotification'.
+
+264     if (event.contentType && !allowedTypes.includes(event.contentType)) {
+                                                              ~~~~~~~~~~~
+
+src/document-analyzer/index.ts:10:13 - error TS2339: Property 'event' does not exist on type 'Message<BucketEventNotification>'.
+
+10     const { event } = message;
+               ~~~~~
+
+src/document-analyzer/index.ts:42:54 - error TS2551: Property 'objectKey' does not exist on type 'BucketEventNotification'. Did you mean 'object'?
+
+42       console.log(`Processing uploaded file: ${event.objectKey}`);
+                                                        ~~~~~~~~~
+
+  node_modules/@liquidmetal-ai/raindrop-framework/dist/bucket.d.ts:159:5
+    159     object: {
+            ~~~~~~
+    'object' is declared here.
+
+src/document-analyzer/index.ts:46:20 - error TS2551: Property 'objectKey' does not exist on type 'BucketEventNotification'. Did you mean 'object'?
+
+46         key: event.objectKey,
+                      ~~~~~~~~~
+
+  node_modules/@liquidmetal-ai/raindrop-framework/dist/bucket.d.ts:159:5
+    159     object: {
+            ~~~~~~
+    'object' is declared here.
+
+src/document-analyzer/index.ts:47:21 - error TS2339: Property 'size' does not exist on type 'BucketEventNotification'.
+
+47         size: event.size,
+                       ~~~~
+
+src/document-analyzer/index.ts:48:28 - error TS2339: Property 'contentType' does not exist on type 'BucketEventNotification'.
+
+48         contentType: event.contentType,
+                              ~~~~~~~~~~~
+
+src/document-analyzer/index.ts:80:17 - error TS2339: Property 'contentType' does not exist on type 'BucketEventNotification'.
+
+80       if (event.contentType?.startsWith('image/')) {
+                   ~~~~~~~~~~~
+
+src/document-analyzer/index.ts:85:37 - error TS2339: Property 'contentType' does not exist on type 'BucketEventNotification'.
+
+85       if (this.isDocumentType(event.contentType)) {
+                                       ~~~~~~~~~~~
+
+src/document-analyzer/index.ts:110:51 - error TS2551: Property 'objectKey' does not exist on type 'BucketEventNotification'. Did you mean 'object'?
+
+110     console.log(`Processing deleted file: ${event.objectKey}`);
+                                                      ~~~~~~~~~
+
+  node_modules/@liquidmetal-ai/raindrop-framework/dist/bucket.d.ts:159:5
+    159     object: {
+            ~~~~~~
+    'object' is declared here.
+
+src/document-analyzer/index.ts:142:55 - error TS2551: Property 'objectKey' does not exist on type 'BucketEventNotification'. Did you mean 'object'?
+
+142     console.log(`Processing multipart upload: ${event.objectKey}`);
+                                                          ~~~~~~~~~
+
+  node_modules/@liquidmetal-ai/raindrop-framework/dist/bucket.d.ts:159:5
+    159     object: {
+            ~~~~~~
+    'object' is declared here.
+
+src/document-analyzer/index.ts:158:59 - error TS2551: Property 'objectKey' does not exist on type 'BucketEventNotification'. Did you mean 'object'?
+
+158     console.log(`Triggering image processing for: ${event.objectKey}`);
+                                                              ~~~~~~~~~
+
+  node_modules/@liquidmetal-ai/raindrop-framework/dist/bucket.d.ts:159:5
+    159     object: {
+            ~~~~~~
+    'object' is declared here.
+
+src/document-analyzer/index.ts:181:62 - error TS2551: Property 'objectKey' does not exist on type 'BucketEventNotification'. Did you mean 'object'?
+
+181     console.log(`Triggering document processing for: ${event.objectKey}`);
+                                                                 ~~~~~~~~~
+
+  node_modules/@liquidmetal-ai/raindrop-framework/dist/bucket.d.ts:159:5
+    159     object: {
+            ~~~~~~
+    'object' is declared here.
+
+src/document-analyzer/index.ts:226:26 - error TS2339: Property 'contentType' does not exist on type 'BucketEventNotification'.
+
+226       const type = event.contentType || 'unknown';
+                             ~~~~~~~~~~~
+
+src/document-analyzer/index.ts:251:15 - error TS2339: Property 'size' does not exist on type 'BucketEventNotification'.
+
+251     if (event.size && event.size > maxSize) {
+                  ~~~~
+
+src/document-analyzer/index.ts:251:29 - error TS2339: Property 'size' does not exist on type 'BucketEventNotification'.
+
+251     if (event.size && event.size > maxSize) {
+                                ~~~~
+
+src/document-analyzer/index.ts:264:15 - error TS2339: Property 'contentType' does not exist on type 'BucketEventNotification'.
+
+264     if (event.contentType && !allowedTypes.includes(event.contentType)) {
+                  ~~~~~~~~~~~
+
+src/document-analyzer/index.ts:264:59 - error TS2339: Property 'contentType' does not exist on type 'BucketEventNotification'.
+
+264     if (event.contentType && !allowedTypes.includes(event.contentType)) {
+                                                              ~~~~~~~~~~~
+
+src/document-processor/index.test.ts:3:10 - error TS2305: Module '"./interfaces.js"' has no exported member 'ComponentRequest'.
+
+3 import { ComponentRequest, ComponentResponse, Environment } from './interfaces.js';
+           ~~~~~~~~~~~~~~~~
+
+src/document-processor/index.test.ts:3:28 - error TS2305: Module '"./interfaces.js"' has no exported member 'ComponentResponse'.
+
+3 import { ComponentRequest, ComponentResponse, Environment } from './interfaces.js';
+                             ~~~~~~~~~~~~~~~~~
+
+src/document-processor/index.test.ts:3:47 - error TS2305: Module '"./interfaces.js"' has no exported member 'Environment'.
+
+3 import { ComponentRequest, ComponentResponse, Environment } from './interfaces.js';
+                                                ~~~~~~~~~~~
+
+src/document-processor/index.test.ts:106:35 - error TS7006: Parameter 'r' implicitly has an 'any' type.
+
+106         const ids = responses.map(r => r.id);
+                                      ~
+
+src/document-processor/index.test.ts:109:27 - error TS7006: Parameter 'response' implicitly has an 'any' type.
+
+109         responses.forEach(response => {
+                              ~~~~~~~~
+
+src/document-processor/index.test.ts:231:16 - error TS18046: 'error' is of type 'unknown'.
+
+231         expect(error.message).toBe('Not implemented');
+                   ~~~~~
+
+src/document-processor/index.test.ts:263:16 - error TS18046: 'error' is of type 'unknown'.
+
+263         expect(error.message).toBe('Not implemented');
+                   ~~~~~
+
+src/document-processor/index.ts:6:10 - error TS2305: Module '"./interfaces.js"' has no exported member 'ComponentRequest'.
+
+6 import { ComponentRequest } from './interfaces.js';
+           ~~~~~~~~~~~~~~~~
+
+src/document-processor/optimization.ts:71:7 - error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+71       optimizedInput = chunkResult.chunks[0];
+         ~~~~~~~~~~~~~~
+
+src/document-processor/utils.ts:1:10 - error TS2305: Module '"./interfaces.js"' has no exported member 'ComponentRequest'.
+
+1 import { ComponentRequest, ComponentResponse, Environment } from './interfaces.js';
+           ~~~~~~~~~~~~~~~~
+
+src/document-processor/utils.ts:1:28 - error TS2305: Module '"./interfaces.js"' has no exported member 'ComponentResponse'.
+
+1 import { ComponentRequest, ComponentResponse, Environment } from './interfaces.js';
+                             ~~~~~~~~~~~~~~~~~
+
+src/document-processor/utils.ts:1:47 - error TS2305: Module '"./interfaces.js"' has no exported member 'Environment'.
+
+1 import { ComponentRequest, ComponentResponse, Environment } from './interfaces.js';
+                                                ~~~~~~~~~~~
+
+src/document-processor/utils.ts:229:18 - error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+229     headers.push(match[2]);
+                     ~~~~~~~~
+
+src/document-processor/validation.ts:6:3 - error TS2305: Module '"../shared/validation.js"' has no exported member 'validateNonEmptyString'.
+
+6   validateNonEmptyString,
+    ~~~~~~~~~~~~~~~~~~~~~~
+
+src/document-processor/validation.ts:7:3 - error TS2724: '"../shared/validation.js"' has no exported member named 'validateStringLength'. Did you mean 'validateInputLength'?
+
+7   validateStringLength,
+    ~~~~~~~~~~~~~~~~~~~~
+
+  src/shared/validation.ts:106:17
+    106 export function validateInputLength(
+                        ~~~~~~~~~~~~~~~~~~~
+    'validateInputLength' is declared here.
+
+src/document-processor/validation.ts:9:3 - error TS2724: '"../shared/validation.js"' has no exported member named 'validateObjectDepth'. Did you mean 'validateObject'?
+
+9   validateObjectDepth,
+    ~~~~~~~~~~~~~~~~~~~
+
+  src/shared/validation.ts:61:17
+    61 export function validateObject(
+                       ~~~~~~~~~~~~~~
+    'validateObject' is declared here.
+
+src/document-processor/validation.ts:10:3 - error TS2305: Module '"../shared/validation.js"' has no exported member 'ValidationException'.
+
+10   ValidationException,
+     ~~~~~~~~~~~~~~~~~~~
+
+src/document-processor/validation.ts:11:3 - error TS2305: Module '"../shared/validation.js"' has no exported member 'ValidationError'.
+
+11   ValidationError
+     ~~~~~~~~~~~~~~~
+
+src/document-processor/validation.ts:41:20 - error TS2488: Type 'ValidationResult' must have a '[Symbol.iterator]()' method that returns an iterator.
+
+41     errors.push(...validateObject(request.options, 'options'));
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+src/entity-resolver/index.test.ts:24:15 - error TS2554: Expected 2 arguments, but got 0.
+
+24     service = new EntityResolverService();
+                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  node_modules/@liquidmetal-ai/raindrop-framework/dist/service.d.ts:9:17
+    9     constructor(ctx: ExecutionContext, env: Env);
+                      ~~~~~~~~~~~~~~~~~~~~~
+    An argument for 'ctx' was not provided.
+
+src/entity-resolver/index.test.ts:43:53 - error TS2554: Expected 1 arguments, but got 2.
+
+43       const response = await service.fetch(request, mockEnv as any);
+                                                       ~~~~~~~~~~~~~~
+
+src/entity-resolver/index.test.ts:47:14 - error TS18046: 'result' is of type 'unknown'.
+
+47       expect(result.status).toBe('success');
+                ~~~~~~
+
+src/entity-resolver/index.test.ts:48:14 - error TS18046: 'result' is of type 'unknown'.
+
+48       expect(result.resolved_entities).toHaveLength(2);
+                ~~~~~~
+
+src/entity-resolver/index.test.ts:49:14 - error TS18046: 'result' is of type 'unknown'.
+
+49       expect(result.metadata.total_entities).toBe(2);
+                ~~~~~~
+
+src/entity-resolver/index.test.ts:59:53 - error TS2554: Expected 1 arguments, but got 2.
+
+59       const response = await service.fetch(request, mockEnv as any);
+                                                       ~~~~~~~~~~~~~~
+
+src/entity-resolver/index.test.ts:156:16 - error TS18048: 'optimized.options' is possibly 'undefined'.
+
+156         expect(optimized.options.optimized).toBe(true);
+                   ~~~~~~~~~~~~~~~~~
+
+src/entity-resolver/utils.ts:161:48 - error TS2345: Argument of type 'Entity | undefined' is not assignable to parameter of type 'Entity'.
+  Type 'undefined' is not assignable to type 'Entity'.
+
+161       const match = await calculateEntityMatch(entity1, entity2, options);
+                                                   ~~~~~~~
+
+src/entity-resolver/utils.ts:575:42 - error TS2532: Object is possibly 'undefined'.
+
+575   for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
+                                             ~~~~~~~~~
+
+src/entity-resolver/utils.ts:576:42 - error TS2532: Object is possibly 'undefined'.
+
+576   for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
+                                             ~~~~~~~~~
+
+src/entity-resolver/utils.ts:581:7 - error TS2532: Object is possibly 'undefined'.
+
+581       matrix[j][i] = Math.min(
+          ~~~~~~~~~
+
+src/entity-resolver/utils.ts:582:9 - error TS2532: Object is possibly 'undefined'.
+
+582         matrix[j][i - 1] + 1, // deletion
+            ~~~~~~~~~
+
+src/entity-resolver/utils.ts:583:9 - error TS2532: Object is possibly 'undefined'.
+
+583         matrix[j - 1][i] + 1, // insertion
+            ~~~~~~~~~~~~~
+
+src/entity-resolver/utils.ts:584:9 - error TS2532: Object is possibly 'undefined'.
+
+584         matrix[j - 1][i - 1] + substitutionCost // substitution
+            ~~~~~~~~~~~~~
+
+src/entity-resolver/utils.ts:589:10 - error TS2532: Object is possibly 'undefined'.
+
+589   return matrix[str2.length][str1.length];
+             ~~~~~~~~~~~~~~~~~~~
+
+src/entity-resolver/utils.ts:605:44 - error TS18048: 'code' is possibly 'undefined'.
+
+605   for (let i = 1; i < normalized.length && code.length < 4; i++) {
+                                               ~~~~
+
+src/entity-resolver/utils.ts:608:26 - error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+608       if (chars.includes(char)) {
+                             ~~~~
+
+src/entity-resolver/utils.ts:609:13 - error TS18048: 'code' is possibly 'undefined'.
+
+609         if (code[code.length - 1] !== digit) {
+                ~~~~
+
+src/entity-resolver/utils.ts:609:18 - error TS18048: 'code' is possibly 'undefined'.
+
+609         if (code[code.length - 1] !== digit) {
+                     ~~~~
+
+src/entity-resolver/utils.ts:617:10 - error TS18048: 'code' is possibly 'undefined'.
+
+617   return code.padEnd(4, '0').substring(0, 4);
+             ~~~~
+
+src/intelligence-pipeline/index.test.ts:48:15 - error TS2554: Expected 2 arguments, but got 0.
+
+48     service = new Service();
+                 ~~~~~~~~~~~~~
+
+  node_modules/@liquidmetal-ai/raindrop-framework/dist/service.d.ts:9:17
+    9     constructor(ctx: ExecutionContext, env: Env);
+                      ~~~~~~~~~~~~~~~~~~~~~
+    An argument for 'ctx' was not provided.
+
+src/intelligence-pipeline/index.test.ts:63:53 - error TS2554: Expected 1 arguments, but got 2.
+
+63       const response = await service.fetch(request, mockEnv);
+                                                       ~~~~~~~
+
+src/intelligence-pipeline/index.test.ts:84:53 - error TS2554: Expected 1 arguments, but got 2.
+
+84       const response = await service.fetch(request, mockEnv);
+                                                       ~~~~~~~
+
+src/intelligence-pipeline/index.test.ts:108:53 - error TS2554: Expected 1 arguments, but got 2.
+
+108       const response = await service.fetch(request, mockEnv);
+                                                        ~~~~~~~
+
+src/intelligence-pipeline/index.test.ts:118:53 - error TS2554: Expected 1 arguments, but got 2.
+
+118       const response = await service.fetch(request, mockEnv);
+                                                        ~~~~~~~
+
+src/intelligence-pipeline/index.test.ts:134:38 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Type 'Env' is missing the following properties from type 'Environment': AI_MODEL, WHISPER_API
+
+134         await expect(transcribeAudio(mockEnv, request)).rejects.toThrow('Not implemented');
+                                         ~~~~~~~
+
+src/intelligence-pipeline/index.test.ts:144:38 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Type 'Env' is missing the following properties from type 'Environment': AI_MODEL, WHISPER_API
+
+144         await expect(transcribeAudio(mockEnv, request)).rejects.toThrow();
+                                         ~~~~~~~
+
+src/intelligence-pipeline/index.test.ts:159:38 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Type 'Env' is missing the following properties from type 'Environment': AI_MODEL, WHISPER_API
+
+159         await expect(extractEntities(mockEnv, request)).rejects.toThrow('Not implemented');
+                                         ~~~~~~~
+
+src/intelligence-pipeline/index.test.ts:168:38 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Type 'Env' is missing the following properties from type 'Environment': AI_MODEL, WHISPER_API
+
+168         await expect(extractEntities(mockEnv, request)).rejects.toThrow();
+                                         ~~~~~~~
+
+src/intelligence-pipeline/index.test.ts:175:39 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Type 'Env' is missing the following properties from type 'Environment': AI_MODEL, WHISPER_API
+
+175         await expect(analyzeSentiment(mockEnv, positiveText)).rejects.toThrow('Not implemented');
+                                          ~~~~~~~
+
+src/intelligence-pipeline/index.test.ts:179:39 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Type 'Env' is missing the following properties from type 'Environment': AI_MODEL, WHISPER_API
+
+179         await expect(analyzeSentiment(mockEnv, '')).rejects.toThrow();
+                                          ~~~~~~~
+
+src/intelligence-pipeline/index.test.ts:186:37 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Type 'Env' is missing the following properties from type 'Environment': AI_MODEL, WHISPER_API
+
+186         await expect(detectPatterns(mockEnv, entities)).rejects.toThrow('Not implemented');
+                                        ~~~~~~~
+
+src/intelligence-pipeline/index.test.ts:193:39 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Type 'Env' is missing the following properties from type 'Environment': AI_MODEL, WHISPER_API
+
+193         await expect(generateInsights(mockEnv, results)).rejects.toThrow('Not implemented');
+                                          ~~~~~~~
+
+src/intelligence-pipeline/index.test.ts:211:35 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Type 'Env' is missing the following properties from type 'Environment': AI_MODEL, WHISPER_API
+
+211         await expect(processBatch(mockEnv, request)).rejects.toThrow('Not implemented');
+                                      ~~~~~~~
+
+src/intelligence-pipeline/index.test.ts:224:35 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Type 'Env' is missing the following properties from type 'Environment': AI_MODEL, WHISPER_API
+
+224         await expect(processBatch(mockEnv, request)).rejects.toThrow();
+                                      ~~~~~~~
+
+src/intelligence-pipeline/index.test.ts:231:15 - error TS2339: Property 'AI_MODEL' does not exist on type 'Env'.
+
+231       mockEnv.AI_MODEL.predict.mockRejectedValue(new Error('AI model unavailable'));
+                  ~~~~~~~~
+
+src/intelligence-pipeline/index.test.ts:238:36 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Type 'Env' is missing the following properties from type 'Environment': AI_MODEL, WHISPER_API
+
+238       await expect(extractEntities(mockEnv, request)).rejects.toThrow();
+                                       ~~~~~~~
+
+src/intelligence-pipeline/index.test.ts:242:15 - error TS2339: Property 'WHISPER_API' does not exist on type 'Env'.
+
+242       mockEnv.WHISPER_API.transcribe.mockRejectedValue(new Error('Whisper API error'));
+                  ~~~~~~~~~~~
+
+src/intelligence-pipeline/index.test.ts:249:36 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Type 'Env' is missing the following properties from type 'Environment': AI_MODEL, WHISPER_API
+
+249       await expect(transcribeAudio(mockEnv, request)).rejects.toThrow();
+                                       ~~~~~~~
+
+src/intelligence-pipeline/index.test.ts:261:36 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Type 'Env' is missing the following properties from type 'Environment': AI_MODEL, WHISPER_API
+
+261       await expect(extractEntities(mockEnv, request)).rejects.toThrow('Not implemented');
+                                       ~~~~~~~
+
+src/intelligence-pipeline/utils.ts:105:12 - error TS2304: Cannot find name 'ProcessingOptions'.
+
+105 ): Promise<ProcessingOptions> {
+               ~~~~~~~~~~~~~~~~~
+
+src/memory-core/index.test.ts:34:15 - error TS2554: Expected 2 arguments, but got 0.
+
+34     service = new Service();
+                 ~~~~~~~~~~~~~
+
+  node_modules/@liquidmetal-ai/raindrop-framework/dist/service.d.ts:9:17
+    9     constructor(ctx: ExecutionContext, env: Env);
+                      ~~~~~~~~~~~~~~~~~~~~~
+    An argument for 'ctx' was not provided.
+
+src/memory-core/index.test.ts:52:53 - error TS2554: Expected 1 arguments, but got 2.
+
+52       const response = await service.fetch(request, mockEnv);
+                                                       ~~~~~~~
+
+src/memory-core/index.test.ts:64:53 - error TS2554: Expected 1 arguments, but got 2.
+
+64       const response = await service.fetch(request, mockEnv);
+                                                       ~~~~~~~
+
+src/memory-core/index.test.ts:76:53 - error TS2554: Expected 1 arguments, but got 2.
+
+76       const response = await service.fetch(request, mockEnv);
+                                                       ~~~~~~~
+
+src/memory-core/index.test.ts:89:53 - error TS2554: Expected 1 arguments, but got 2.
+
+89       const response = await service.fetch(request, mockEnv);
+                                                       ~~~~~~~
+
+src/memory-core/index.test.ts:103:53 - error TS2554: Expected 1 arguments, but got 2.
+
+103       const response = await service.fetch(request, mockEnv);
+                                                        ~~~~~~~
+
+src/memory-core/index.test.ts:112:28 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+112           createMemoryNode(mockEnv, 'Test content', 'entity', { source: 'test' })
+                               ~~~~~~~
+
+src/memory-core/index.test.ts:118:28 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+118           createMemoryNode(mockEnv, 'Content 1', 'entity')
+                               ~~~~~~~
+
+src/memory-core/index.test.ts:122:28 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+122           createMemoryNode(mockEnv, 'Content 2', 'concept')
+                               ~~~~~~~
+
+src/memory-core/index.test.ts:128:28 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+128           createMemoryNode(mockEnv, 'Test', 'invalid' as any)
+                               ~~~~~~~
+
+src/memory-core/index.test.ts:135:28 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+135           createMemoryNode(mockEnv, 'Test content', 'entity', metadata)
+                               ~~~~~~~
+
+src/memory-core/index.test.ts:143:36 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+143         await expect(getMemoryNode(mockEnv, nodeId)).rejects.toThrow('Not implemented');
+                                       ~~~~~~~
+
+src/memory-core/index.test.ts:148:36 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+148         await expect(getMemoryNode(mockEnv, nonExistentId)).rejects.toThrow('Not implemented');
+                                       ~~~~~~~
+
+src/memory-core/index.test.ts:152:36 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+152         await expect(getMemoryNode(mockEnv, '')).rejects.toThrow();
+                                       ~~~~~~~
+
+src/memory-core/index.test.ts:153:36 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+153         await expect(getMemoryNode(mockEnv, '   ')).rejects.toThrow();
+                                       ~~~~~~~
+
+src/memory-core/index.test.ts:162:28 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+162           createMemoryEdge(mockEnv, 'node1', 'node2', 'related_to', 0.8)
+                               ~~~~~~~
+
+src/memory-core/index.test.ts:168:28 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+168           createMemoryEdge(mockEnv, '', 'node2', 'related_to')
+                               ~~~~~~~
+
+src/memory-core/index.test.ts:172:28 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+172           createMemoryEdge(mockEnv, 'node1', '', 'related_to')
+                               ~~~~~~~
+
+src/memory-core/index.test.ts:176:28 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+176           createMemoryEdge(mockEnv, 'node1', 'node2', '')
+                               ~~~~~~~
+
+src/memory-core/index.test.ts:182:28 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+182           createMemoryEdge(mockEnv, 'node1', 'node2', 'related_to', 1.5)
+                               ~~~~~~~
+
+src/memory-core/index.test.ts:186:28 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+186           createMemoryEdge(mockEnv, 'node1', 'node2', 'related_to', -0.1)
+                               ~~~~~~~
+
+src/memory-core/index.test.ts:192:28 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+192           createMemoryEdge(mockEnv, 'node1', 'node1', 'self_reference')
+                               ~~~~~~~
+
+src/memory-core/index.test.ts:206:36 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+206         await expect(traverseGraph(mockEnv, query)).rejects.toThrow('Not implemented');
+                                       ~~~~~~~
+
+src/memory-core/index.test.ts:215:36 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+215         await expect(traverseGraph(mockEnv, query)).rejects.toThrow('Not implemented');
+                                       ~~~~~~~
+
+src/memory-core/index.test.ts:225:36 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+225         await expect(traverseGraph(mockEnv, query)).rejects.toThrow('Not implemented');
+                                       ~~~~~~~
+
+src/memory-core/index.test.ts:235:36 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+235         await expect(traverseGraph(mockEnv, query)).rejects.toThrow('Not implemented');
+                                       ~~~~~~~
+
+src/memory-core/index.test.ts:244:36 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+244         await expect(traverseGraph(mockEnv, query)).rejects.toThrow('Not implemented');
+                                       ~~~~~~~
+
+src/memory-core/index.test.ts:251:28 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+251           findShortestPath(mockEnv, 'node1', 'node2', 5)
+                               ~~~~~~~
+
+src/memory-core/index.test.ts:257:28 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+257           findShortestPath(mockEnv, 'isolated1', 'isolated2', 10)
+                               ~~~~~~~
+
+src/memory-core/index.test.ts:263:28 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+263           findShortestPath(mockEnv, 'node1', 'distant-node', 2)
+                               ~~~~~~~
+
+src/memory-core/index.test.ts:270:35 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+270         await expect(detectCycles(mockEnv)).rejects.toThrow('Not implemented');
+                                      ~~~~~~~
+
+src/memory-core/index.test.ts:274:35 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+274         await expect(detectCycles(mockEnv, 'node1')).rejects.toThrow('Not implemented');
+                                      ~~~~~~~
+
+src/memory-core/index.test.ts:278:35 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+278         await expect(detectCycles(mockEnv)).rejects.toThrow('Not implemented');
+                                      ~~~~~~~
+
+src/memory-core/index.test.ts:286:44 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+286         await expect(analyzeGraphStructure(mockEnv)).rejects.toThrow('Not implemented');
+                                               ~~~~~~~
+
+src/memory-core/index.test.ts:290:44 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+290         await expect(analyzeGraphStructure(mockEnv)).rejects.toThrow('Not implemented');
+                                               ~~~~~~~
+
+src/memory-core/index.test.ts:294:44 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+294         await expect(analyzeGraphStructure(mockEnv)).rejects.toThrow('Not implemented');
+                                               ~~~~~~~
+
+src/memory-core/index.test.ts:301:15 - error TS2339: Property 'MEMORY_DATABASE' does not exist on type 'Env'.
+
+301       mockEnv.MEMORY_DATABASE.exec.mockRejectedValue(new Error('Database connection failed'));
+                  ~~~~~~~~~~~~~~~
+
+src/memory-core/index.test.ts:304:26 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+304         createMemoryNode(mockEnv, 'Test', 'entity')
+                             ~~~~~~~
+
+src/memory-core/index.test.ts:309:15 - error TS2339: Property 'MEMORY_DATABASE' does not exist on type 'Env'.
+
+309       mockEnv.MEMORY_DATABASE.prepare.mockImplementation(() => {
+                  ~~~~~~~~~~~~~~~
+
+src/memory-core/index.test.ts:314:23 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+314         getMemoryNode(mockEnv, 'test-id')
+                          ~~~~~~~
+
+src/memory-core/index.test.ts:320:26 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+320         createMemoryNode(mockEnv, `Content ${i}`, 'entity')
+                             ~~~~~~~
+
+src/memory-core/index.test.ts:337:34 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+337       await expect(traverseGraph(mockEnv, query)).rejects.toThrow('Not implemented');
+                                     ~~~~~~~
+
+src/memory-core/index.test.ts:346:34 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+346       await expect(traverseGraph(mockEnv, query)).rejects.toThrow();
+                                     ~~~~~~~
+
+src/memory-core/index.ts:42:41 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+42     const node = await createMemoryNode(c.env, data.content, data.type, data.metadata);
+                                           ~~~~~
+
+src/memory-core/index.ts:66:38 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+66     const node = await getMemoryNode(c.env, id);
+                                        ~~~~~
+
+src/memory-core/index.ts:97:40 - error TS2345: Argument of type 'Env' is not assignable to parameter of type 'Environment'.
+  Types of property 'GRAPH_DATABASE' are incompatible.
+    Type 'SmartSql' is missing the following properties from type 'DatabaseBinding': prepare, exec, batch
+
+97     const result = await traverseGraph(c.env, query);
+                                          ~~~~~
+
+src/memory-core/interfaces.ts:16:13 - error TS2456: Type alias 'MetadataObject' circularly references itself.
+
+16 export type MetadataObject = Record<string, MetadataValue>;
+               ~~~~~~~~~~~~~~
+
+src/memory-core/interfaces.ts:17:6 - error TS2456: Type alias 'MetadataValue' circularly references itself.
+
+17 type MetadataValue = string | number | boolean | null | MetadataObject | MetadataValue[];
+        ~~~~~~~~~~~~~
+
+src/memory-core/utils.test.ts:18:3 - error TS2353: Object literal may only specify known properties, and 'MEMORY_DATABASE' does not exist in type 'Environment'.
+
+18   MEMORY_DATABASE: {
+     ~~~~~~~~~~~~~~~
+
+src/memory-core/utils.test.ts:100:17 - error TS2339: Property 'MEMORY_DATABASE' does not exist on type 'Environment'.
+
+100         mockEnv.MEMORY_DATABASE.exec.mockRejectedValue(new Error('Database error'));
+                    ~~~~~~~~~~~~~~~
+
+src/memory-core/utils.test.ts:257:32 - error TS2322: Type '"important"' is not assignable to type 'RelationshipType'.
+
+257           relationship_types: ['important'],
+                                   ~~~~~~~~~~~
+
+src/memory-core/utils.test.ts:260:22 - error TS2353: Object literal may only specify known properties, and 'type' does not exist in type 'GraphFilters'.
+
+260           filters: { type: 'entity', metadata: { verified: true } }
+                         ~~~~
+
+  src/memory-core/interfaces.ts:46:3
+    46   filters?: GraphFilters; // Additional node/edge filters
+         ~~~~~~~
+    The expected type comes from property 'filters' which is declared here on type 'GraphQuery'
+
+src/memory-core/utils.test.ts:355:13 - error TS2322: Type '"related"' is not assignable to type 'RelationshipType'.
+
+355             relationship_type: 'related',
+                ~~~~~~~~~~~~~~~~~
+
+  src/memory-core/interfaces.ts:24:3
+    24   relationship_type: RelationshipType;
+         ~~~~~~~~~~~~~~~~~
+    The expected type comes from property 'relationship_type' which is declared here on type 'MemoryEdge'
+
+src/pattern-detector/index.test.ts:31:13 - error TS2741: Property 'analysisType' is missing in type '{ input: string; options: { algorithm: "regex"; }; metadata: { source: string; }; }' but required in type 'PatternDetectionRequest'.
+
+31       const request: ComponentRequest = {
+               ~~~~~~~
+
+  src/pattern-detector/interfaces.ts:4:3
+    4   analysisType: 'orphan_detection' | 'cycle_analysis' | 'hub_identification' | 'anomaly_detection' | 'trend_analysis' | 'text_patterns';
+        ~~~~~~~~~~~~
+    'analysisType' is declared here.
+
+src/pattern-detector/index.test.ts:46:13 - error TS2741: Property 'analysisType' is missing in type '{ input: string; options: {}; metadata: {}; }' but required in type 'PatternDetectionRequest'.
+
+46       const request: ComponentRequest = {
+               ~~~~~~~
+
+  src/pattern-detector/interfaces.ts:4:3
+    4   analysisType: 'orphan_detection' | 'cycle_analysis' | 'hub_identification' | 'anomaly_detection' | 'trend_analysis' | 'text_patterns';
+        ~~~~~~~~~~~~
+    'analysisType' is declared here.
+
+src/pattern-detector/index.test.ts:60:13 - error TS2741: Property 'analysisType' is missing in type '{ input: string; options: {}; metadata: {}; }' but required in type 'PatternDetectionRequest'.
+
+60       const request: ComponentRequest = {
+               ~~~~~~~
+
+  src/pattern-detector/interfaces.ts:4:3
+    4   analysisType: 'orphan_detection' | 'cycle_analysis' | 'hub_identification' | 'anomaly_detection' | 'trend_analysis' | 'text_patterns';
+        ~~~~~~~~~~~~
+    'analysisType' is declared here.
+
+src/pattern-detector/index.test.ts:83:20 - error TS2353: Object literal may only specify known properties, and 'performance' does not exist in type 'PatternDetectionOptions'.
+
+83         options: { performance: 'high' },
+                      ~~~~~~~~~~~
+
+  src/pattern-detector/interfaces.ts:5:3
+    5   options?: PatternDetectionOptions;
+        ~~~~~~~
+    The expected type comes from property 'options' which is declared here on type 'PatternDetectionRequest'
+
+src/pattern-detector/index.test.ts:90:30 - error TS2339: Property 'optimized' does not exist on type 'PatternDetectionOptions'.
+
+90       expect(result.options?.optimized).toBe(true);
+                                ~~~~~~~~~
+
+src/pattern-detector/index.test.ts:97:13 - error TS2741: Property 'analysisType' is missing in type '{ input: string; options: { algorithm: "regex"; }; metadata: {}; }' but required in type 'PatternDetectionRequest'.
+
+97       const request: ComponentRequest = {
+               ~~~~~~~
+
+  src/pattern-detector/interfaces.ts:4:3
+    4   analysisType: 'orphan_detection' | 'cycle_analysis' | 'hub_identification' | 'anomaly_detection' | 'trend_analysis' | 'text_patterns';
+        ~~~~~~~~~~~~
+    'analysisType' is declared here.
+
+src/pattern-detector/index.test.ts:110:13 - error TS2741: Property 'analysisType' is missing in type '{ input: string; options: { algorithm: "regex"; }; metadata: {}; }' but required in type 'PatternDetectionRequest'.
+
+110       const request: ComponentRequest = {
+                ~~~~~~~
+
+  src/pattern-detector/interfaces.ts:4:3
+    4   analysisType: 'orphan_detection' | 'cycle_analysis' | 'hub_identification' | 'anomaly_detection' | 'trend_analysis' | 'text_patterns';
+        ~~~~~~~~~~~~
+    'analysisType' is declared here.
+
+src/pattern-detector/index.test.ts:123:13 - error TS2741: Property 'analysisType' is missing in type '{ input: string; options: { algorithm: "regex"; }; metadata: {}; }' but required in type 'PatternDetectionRequest'.
+
+123       const request: ComponentRequest = {
+                ~~~~~~~
+
+  src/pattern-detector/interfaces.ts:4:3
+    4   analysisType: 'orphan_detection' | 'cycle_analysis' | 'hub_identification' | 'anomaly_detection' | 'trend_analysis' | 'text_patterns';
+        ~~~~~~~~~~~~
+    'analysisType' is declared here.
+
+src/pattern-detector/index.test.ts:136:13 - error TS2741: Property 'analysisType' is missing in type '{ input: string; options: { algorithm: "regex"; }; metadata: {}; }' but required in type 'PatternDetectionRequest'.
+
+136       const request: ComponentRequest = {
+                ~~~~~~~
+
+  src/pattern-detector/interfaces.ts:4:3
+    4   analysisType: 'orphan_detection' | 'cycle_analysis' | 'hub_identification' | 'anomaly_detection' | 'trend_analysis' | 'text_patterns';
+        ~~~~~~~~~~~~
+    'analysisType' is declared here.
+
+src/pattern-detector/index.ts:45:54 - error TS2322: Type 'unknown' is not assignable to type 'string | number | boolean | object | LogFields | Error | null | undefined'.
+
+45     c.env.logger.error('Pattern detection failed', { error });
+                                                        ~~~~~
+
+src/search-engine/index.test.ts:60:15 - error TS2554: Expected 2 arguments, but got 0.
+
+60     service = new Service();
+                 ~~~~~~~~~~~~~
+
+  node_modules/@liquidmetal-ai/raindrop-framework/dist/service.d.ts:9:17
+    9     constructor(ctx: ExecutionContext, env: Env);
+                      ~~~~~~~~~~~~~~~~~~~~~
+    An argument for 'ctx' was not provided.
+
+src/search-engine/index.test.ts:77:53 - error TS2554: Expected 1 arguments, but got 2.
+
+77       const response = await service.fetch(request, mockEnv);
+                                                       ~~~~~~~
+
+src/search-engine/index.test.ts:82:14 - error TS18046: 'data' is of type 'unknown'.
+
+82       expect(data.success).toBe(true);
+                ~~~~
+
+src/search-engine/index.test.ts:83:14 - error TS18046: 'data' is of type 'unknown'.
+
+83       expect(data.results).toBeDefined();
+                ~~~~
+
+src/search-engine/index.test.ts:84:14 - error TS18046: 'data' is of type 'unknown'.
+
+84       expect(data.total).toBeGreaterThan(0);
+                ~~~~
+
+src/search-engine/index.test.ts:96:53 - error TS2554: Expected 1 arguments, but got 2.
+
+96       const response = await service.fetch(request, mockEnv);
+                                                       ~~~~~~~
+
+src/search-engine/index.test.ts:101:14 - error TS18046: 'data' is of type 'unknown'.
+
+101       expect(data.success).toBe(true);
+                 ~~~~
+
+src/search-engine/index.test.ts:102:14 - error TS18046: 'data' is of type 'unknown'.
+
+102       expect(data.results).toBeDefined();
+                 ~~~~
+
+src/search-engine/index.test.ts:103:14 - error TS18046: 'data' is of type 'unknown'.
+
+103       expect(data.results.length).toBeGreaterThan(0);
+                 ~~~~
+
+src/search-engine/index.test.ts:104:14 - error TS18046: 'data' is of type 'unknown'.
+
+104       expect(data.search_type).toBe('semantic');
+                 ~~~~
+
+src/search-engine/index.test.ts:116:53 - error TS2554: Expected 1 arguments, but got 2.
+
+116       const response = await service.fetch(request, mockEnv);
+                                                        ~~~~~~~
+
+src/search-engine/index.test.ts:121:14 - error TS18046: 'data' is of type 'unknown'.
+
+121       expect(data.success).toBe(true);
+                 ~~~~
+
+src/search-engine/index.test.ts:122:14 - error TS18046: 'data' is of type 'unknown'.
+
+122       expect(data.combined_results).toBeDefined();
+                 ~~~~
+
+src/search-engine/index.test.ts:123:14 - error TS18046: 'data' is of type 'unknown'.
+
+123       expect(data.search_method).toBe('hybrid');
+                 ~~~~
+
+src/search-engine/index.test.ts:135:53 - error TS2554: Expected 1 arguments, but got 2.
+
+135       const response = await service.fetch(request, mockEnv);
+                                                        ~~~~~~~
+
+src/search-engine/index.test.ts:140:14 - error TS18046: 'data' is of type 'unknown'.
+
+140       expect(data.success).toBe(true);
+                 ~~~~
+
+src/search-engine/index.test.ts:141:14 - error TS18046: 'data' is of type 'unknown'.
+
+141       expect(data.embeddings).toBeDefined();
+                 ~~~~
+
+src/search-engine/index.test.ts:142:14 - error TS18046: 'data' is of type 'unknown'.
+
+142       expect(data.embeddings.length).toBe(384);
+                 ~~~~
+
+src/search-engine/index.test.ts:143:14 - error TS18046: 'data' is of type 'unknown'.
+
+143       expect(data.dimensions).toBe(384);
+                 ~~~~
+
+src/search-engine/index.test.ts:159:53 - error TS2554: Expected 1 arguments, but got 2.
+
+159       const response = await service.fetch(request, mockEnv);
+                                                        ~~~~~~~
+
+src/search-engine/index.test.ts:164:14 - error TS18046: 'data' is of type 'unknown'.
+
+164       expect(data.success).toBe(true);
+                 ~~~~
+
+src/search-engine/index.test.ts:165:14 - error TS18046: 'data' is of type 'unknown'.
+
+165       expect(data.indexed).toBe(true);
+                 ~~~~
+
+src/search-engine/index.test.ts:166:14 - error TS18046: 'data' is of type 'unknown'.
+
+166       expect(data.document_id).toBeDefined();
+                 ~~~~
+
+src/search-engine/index.test.ts:167:14 - error TS18046: 'data' is of type 'unknown'.
+
+167       expect(data.status).toBe('success');
+                 ~~~~
+
+src/search-engine/index.test.ts:183:53 - error TS2554: Expected 1 arguments, but got 2.
+
+183       const response = await service.fetch(request, mockEnv);
+                                                        ~~~~~~~
+
+src/search-engine/index.test.ts:188:14 - error TS18046: 'data' is of type 'unknown'.
+
+188       expect(data.id).toBeDefined();
+                 ~~~~
+
+src/search-engine/index.test.ts:189:14 - error TS18046: 'data' is of type 'unknown'.
+
+189       expect(data.status).toBe('success');
+                 ~~~~
+
+src/search-engine/index.test.ts:190:14 - error TS18046: 'data' is of type 'unknown'.
+
+190       expect(data.result).toBeDefined();
+                 ~~~~
+
+src/search-engine/index.test.ts:191:14 - error TS18046: 'data' is of type 'unknown'.
+
+191       expect(data.processing_time_ms).toBeGreaterThanOrEqual(0);
+                 ~~~~
+
+src/search-engine/index.test.ts:201:53 - error TS2554: Expected 1 arguments, but got 2.
+
+201       const response = await service.fetch(request, mockEnv);
+                                                        ~~~~~~~
+
+src/search-engine/index.test.ts:205:14 - error TS18046: 'data' is of type 'unknown'.
+
+205       expect(data.error).toBe('Query is required');
+                 ~~~~
+
+src/search-engine/index.test.ts:215:53 - error TS2554: Expected 1 arguments, but got 2.
+
+215       const response = await service.fetch(request, mockEnv);
+                                                        ~~~~~~~
+
+src/search-engine/index.test.ts:219:14 - error TS18046: 'data' is of type 'unknown'.
+
+219       expect(data.error).toBe('Text is required');
+                 ~~~~
+
+src/search-engine/index.test.ts:229:53 - error TS2554: Expected 1 arguments, but got 2.
+
+229       const response = await service.fetch(request, mockEnv);
+                                                        ~~~~~~~
+
+src/search-engine/index.test.ts:233:14 - error TS18046: 'data' is of type 'unknown'.
+
+233       expect(data.error).toBe('Document is required');
+                 ~~~~
+
+src/search-engine/index.test.ts:390:53 - error TS2554: Expected 1 arguments, but got 2.
+
+390       const response = await service.fetch(request, mockEnv);
+                                                        ~~~~~~~
+
+src/search-engine/index.test.ts:395:14 - error TS18046: 'data' is of type 'unknown'.
+
+395       expect(data.status).toBe('ok');
+                 ~~~~
+
+src/search-engine/index.test.ts:396:14 - error TS18046: 'data' is of type 'unknown'.
+
+396       expect(data.timestamp).toBeDefined();
+                 ~~~~
+
+src/search-engine/index.test.ts:408:53 - error TS2554: Expected 1 arguments, but got 2.
+
+408       const response = await service.fetch(request, mockEnv);
+                                                        ~~~~~~~
+
+src/search-engine/index.test.ts:419:53 - error TS2554: Expected 1 arguments, but got 2.
+
+419       const response = await service.fetch(request, mockEnv);
+                                                        ~~~~~~~
+
+src/search-engine/index.ts:81:7 - error TS2783: 'success' is specified more than once, so this usage will be overwritten.
+
+81       success: true,
+         ~~~~~~~~~~~~~
+
+  src/search-engine/index.ts:82:7
+    82       ...results
+             ~~~~~~~~~~
+    This spread always overwrites this property.
+
+src/search-engine/interfaces.ts:7:10 - error TS1205: Re-exporting a type when 'isolatedModules' is enabled requires using 'export type'.
+
+7 export { ComponentRequest, ComponentResponse, Environment };
+           ~~~~~~~~~~~~~~~~
+
+src/search-engine/interfaces.ts:7:28 - error TS1205: Re-exporting a type when 'isolatedModules' is enabled requires using 'export type'.
+
+7 export { ComponentRequest, ComponentResponse, Environment };
+                             ~~~~~~~~~~~~~~~~~
+
+src/search-engine/interfaces.ts:7:47 - error TS1205: Re-exporting a type when 'isolatedModules' is enabled requires using 'export type'.
+
+7 export { ComponentRequest, ComponentResponse, Environment };
+                                                ~~~~~~~~~~~
+
+src/search-engine/utils.ts:18:3 - error TS2440: Import declaration conflicts with local declaration of 'generateRequestId'.
+
+18   generateRequestId,
+     ~~~~~~~~~~~~~~~~~
+
+src/search-engine/utils.ts:45:14 - error TS2304: Cannot find name 'createFailedResponse'.
+
+45       return createFailedResponse(requestId, startTime, validationResult.error, request.metadata);
+                ~~~~~~~~~~~~~~~~~~~~
+
+src/search-engine/utils.ts:66:12 - error TS2304: Cannot find name 'createSuccessResponse'.
+
+66     return createSuccessResponse(requestId, startTime, searchResults, request.metadata);
+              ~~~~~~~~~~~~~~~~~~~~~
+
+src/search-engine/utils.ts:75:12 - error TS2304: Cannot find name 'createFailedResponse'.
+
+75     return createFailedResponse(requestId, startTime, errorMessage, request.metadata);
+              ~~~~~~~~~~~~~~~~~~~~
+
+src/search-engine/utils.ts:123:12 - error TS2304: Cannot find name 'normalizeQuery'.
+
+123     input: normalizeQuery(request.input),
+               ~~~~~~~~~~~~~~
+
+src/shared/content-processing.ts:128:14 - error TS2532: Object is possibly 'undefined'.
+
+128       level: match[1].length,
+                 ~~~~~~~~
+
+src/shared/content-processing.ts:129:13 - error TS2532: Object is possibly 'undefined'.
+
+129       text: match[2].trim()
+                ~~~~~~~~
+
+src/shared/utils.ts:23:66 - error TS2339: Property 'message' does not exist on type 'ApplicationError'.
+  Property 'message' does not exist on type 'ValidationError'.
+
+23   const errorMessage = typeof error === 'string' ? error : error.message || 'Unknown error';
+                                                                    ~~~~~~~
+
+src/shared/utils.ts:110:43 - error TS2683: 'this' implicitly has type 'any' because it does not have a type annotation.
+
+110     timeout = setTimeout(() => func.apply(this, args), wait);
+                                              ~~~~
+
+  src/shared/utils.ts:102:17
+    102 export function debounce<T extends (...args: any[]) => any>(
+                        ~~~~~~~~
+    An outer value of 'this' is shadowed by this container.
+
+src/voice-processor/index.test.ts:17:7 - error TS2554: Expected 2 arguments, but got 1.
+
+17       new ServiceClass(mockEnv);
+         ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  node_modules/@liquidmetal-ai/raindrop-framework/dist/service.d.ts:9:40
+    9     constructor(ctx: ExecutionContext, env: Env);
+                                             ~~~~~~~~
+    An argument for 'env' was not provided.
+
+src/voice-processor/red-phase.test.ts:53:20 - error TS2322: Type '"invalid"' is not assignable to type 'AudioFormat | undefined'.
+
+53         options: { format: 'invalid' }
+                      ~~~~~~
+
+src/voice-processor/red-phase.test.ts:96:14 - error TS18048: 'result.options' is possibly 'undefined'.
+
+96       expect(result.options.quality).toBe('high');
+                ~~~~~~~~~~~~~~
+
+src/voice-processor/red-phase.test.ts:97:14 - error TS18048: 'result.options' is possibly 'undefined'.
+
+97       expect(result.options.compression).toBe('auto');
+                ~~~~~~~~~~~~~~
+
+src/voice-processor/red-phase.test.ts:98:14 - error TS18048: 'result.options' is possibly 'undefined'.
+
+98       expect(result.options.format).toBe('wav');
+                ~~~~~~~~~~~~~~
+
+src/voice-processor/red-phase.test.ts:99:14 - error TS18048: 'result.metadata' is possibly 'undefined'.
+
+99       expect(result.metadata.optimized).toBe(true);
+                ~~~~~~~~~~~~~~~
+
+src/voice-processor/red-phase.test.ts:108:14 - error TS18048: 'result.options' is possibly 'undefined'.
+
+108       expect(result.options.quality).toBe('balanced');
+                 ~~~~~~~~~~~~~~
+
+src/voice-processor/red-phase.test.ts:109:14 - error TS18048: 'result.options' is possibly 'undefined'.
+
+109       expect(result.options.compression).toBe('auto');
+                 ~~~~~~~~~~~~~~
+
+src/voice-processor/red-phase.test.ts:110:14 - error TS18048: 'result.options' is possibly 'undefined'.
+
+110       expect(result.options.format).toBe('wav');
+                 ~~~~~~~~~~~~~~
+
+src/voice-processor/red-phase.test.ts:111:14 - error TS18048: 'result.metadata' is possibly 'undefined'.
+
+111       expect(result.metadata.optimized).toBe(true);
+                 ~~~~~~~~~~~~~~~
+
+src/voice-processor/utils.ts:198:7 - error TS2353: Object literal may only specify known properties, and 'targetSampleRate' does not exist in type 'VoiceProcessingOptions'.
+
+198       targetSampleRate: qualitySettings.sampleRate,
+          ~~~~~~~~~~~~~~~~
+
+  src/voice-processor/interfaces.ts:85:3
+    85   options?: VoiceProcessingOptions;
+         ~~~~~~~
+    The expected type comes from property 'options' which is declared here on type 'ComponentRequest'
+
+
+Found 228 errors in 27 files.
+
+Errors  Files
+     9  src/api-gateway/index.ts:6
+    16  src/audio-processor/index.ts:10
+    16  src/document-analyzer/index.ts:10
+     7  src/document-processor/index.test.ts:3
+     1  src/document-processor/index.ts:6
+     1  src/document-processor/optimization.ts:71
+     4  src/document-processor/utils.ts:1
+     6  src/document-processor/validation.ts:6
+     7  src/entity-resolver/index.test.ts:24
+    13  src/entity-resolver/utils.ts:161
+    20  src/intelligence-pipeline/index.test.ts:48
+     1  src/intelligence-pipeline/utils.ts:105
+    43  src/memory-core/index.test.ts:34
+     3  src/memory-core/index.ts:42
+     2  src/memory-core/interfaces.ts:16
+     5  src/memory-core/utils.test.ts:18
+     9  src/pattern-detector/index.test.ts:31
+     1  src/pattern-detector/index.ts:45
+    40  src/search-engine/index.test.ts:60
+     1  src/search-engine/index.ts:81
+     3  src/search-engine/interfaces.ts:7
+     5  src/search-engine/utils.ts:18
+     2  src/shared/content-processing.ts:128
+     2  src/shared/utils.ts:23
+     1  src/voice-processor/index.test.ts:17
+     9  src/voice-processor/red-phase.test.ts:53
+     1  src/voice-processor/utils.ts:198
+Type check failed. Please fix the TypeScript errors before building.
+(base) adariprasad@Adaris-MacBook-Air hansei % [B
