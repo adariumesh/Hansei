@@ -491,16 +491,22 @@
             const textInput = document.getElementById('textInput');
             const text = textInput.value.trim();
             
-            if (!text) return;
+            if (!text) {
+                alert('Please enter some text');
+                return;
+            }
 
             const btn = document.getElementById('submitBtn');
+            const status = document.getElementById('status');
             btn.disabled = true;
             btn.textContent = '⏳ Processing...';
+            status.textContent = 'Saving text...';
+            status.classList.add('active');
 
             try {
                 const response = await fetch(`${API_BASE}/infer`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify({
                         content: text,
                         user_id: USER_ID
@@ -513,19 +519,27 @@
                     textInput.value = '';
                     addRecentEntry(text, result.extracted);
                     btn.textContent = '✅ Saved!';
+                    status.textContent = '✅ Text saved to memory!';
                     setTimeout(() => {
                         btn.textContent = '💾 Save to Memory';
                         btn.disabled = false;
+                        status.textContent = 'Ready to record';
+                        status.classList.remove('active');
                     }, 2000);
                     // Auto-refresh graph
                     searchGraph();
                 } else {
                     btn.textContent = '❌ Error';
                     btn.disabled = false;
+                    status.textContent = '❌ Error: ' + (result.error || 'Unknown error');
+                    status.classList.add('active');
+                    console.error('API error:', result);
                 }
             } catch (err) {
                 btn.textContent = '❌ Failed';
                 btn.disabled = false;
+                status.textContent = '❌ Network error';
+                status.classList.add('active');
                 console.error('Submit error:', err);
             }
         });

@@ -10,8 +10,8 @@ import { Env } from './raindrop.gen';
 // Create Hono app with middleware
 const app = new Hono<{ Bindings: Env }>();
 
-// Add CORS middleware
-app.use('*', cors({
+// Add CORS middleware - must be before other routes
+app.use('/*', cors({
   origin: '*',
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],
@@ -22,6 +22,19 @@ app.use('*', cors({
 
 // Add request logging middleware
 app.use('*', logger());
+
+// Explicit OPTIONS handler for CORS preflight
+app.options('*', (c) => {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '600',
+    }
+  });
+});
 
 // Health check endpoint
 app.get('/health', (c) => {
@@ -47,7 +60,17 @@ app.post('/api/echo', async (c) => {
 // Voice inference: extract entities/relationships/metadata and store in SmartMemory
 app.post('/infer', async (c) => {
   try {
-    const body = await c.req.json();
+    let body: any;
+    const contentType = c.req.header('content-type') || '';
+    
+    // Handle both application/json and text/plain (for CORS workaround)
+    if (contentType.includes('text/plain')) {
+      const text = await c.req.text();
+      body = JSON.parse(text);
+    } else {
+      body = await c.req.json();
+    }
+    
     const userId: string | undefined = body.user_id || body.userId;
     const content: string | undefined = body.content || body.transcript || body.text;
 
@@ -308,6 +331,211 @@ app.get('/api/graph', async (c) => {
   } catch (error) {
     return c.json({ 
       error: 'Graph query failed', 
+      message: error instanceof Error ? error.message : 'Unknown error' 
+    }, 500);
+  }
+});
+
+// Conversational query: ask questions about stored memories
+app.post('/api/chat', async (c) => {
+  try {
+    let body: any;
+    const contentType = c.req.header('content-type') || '';
+    
+    // Handle both application/json and text/plain (for CORS workaround)
+    if (contentType.includes('text/plain')) {
+      const text = await c.req.text();
+      body = JSON.parse(text);
+    } else {
+      body = await c.req.json();
+    }
+    
+    const message = body.message;
+    const userId = body.user_id || 'unknown';
+    
+    if (!message) {
+      return c.json({ error: 'Missing message' }, 400);
+    }
+
+    // Step 1: Search relevant memories
+    const searchResult = await c.env.AGENT_MEMORY.searchSemanticMemory(message);
+    const results = searchResult.documentSearchResponse?.results || [];
+    
+    // Step 2: Build context from top results
+    const context = results.slice(0, 5).map((r: any, idx: number) => {
+      try {
+        const doc = JSON.parse(r.text || '{}');
+        const content = doc.content || '';
+        const entities = doc.extracted?.entities?.map((e: any) => e.content).join(', ') || '';
+        return `Memory ${idx + 1}: ${content || entities}`;
+      } catch (e) {
+        return '';
+      }
+    }).filter(Boolean).join('\n');
+    
+    if (!context) {
+      return c.json({
+        answer: "I don't have any memories about that yet. Try adding some thoughts first!",
+        sources: []
+      });
+    }
+
+    // Step 3: Generate conversational response with LLaMA
+    const systemPrompt = `You are HANSEI, the user's personal memory companion. Answer questions based ONLY on their stored memories below. Be conversational, insightful, and notice patterns.
+
+Stored Memories:
+${context}
+
+If the memories don't contain enough information, say so. If you notice patterns or connections, point them out.`;
+
+    const aiResult = await c.env.AI.run('llama-3.3-70b', {
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: message }
+      ],
+      max_tokens: 400,
+      temperature: 0.7
+    } as any);
+
+    const answer = (aiResult as any).response || (aiResult as any).choices?.[0]?.message?.content || 'Sorry, I could not generate a response.';
+
+    return c.json({
+      success: true,
+      answer,
+      sources: results.slice(0, 5).map((r: any) => r.chunkSignature),
+      memoryCount: results.length
+    });
+  } catch (error) {
+    return c.json({ 
+      error: 'Chat query failed', 
+      message: error instanceof Error ? error.message : 'Unknown error' 
+    }, 500);
+  }
+});
+
+// Pattern detection: find orphaned nodes (high-weight but no connections)
+app.get('/api/patterns/orphans', async (c) => {
+  try {
+    const searchResult = await c.env.AGENT_MEMORY.searchSemanticMemory('all memories');
+    const results = searchResult.documentSearchResponse?.results || [];
+    
+    const allNodes = new Map<string, any>();
+    const connectedNodes = new Set<string>();
+    
+    // Collect all nodes and track which ones have connections
+    results.forEach((result: any) => {
+      try {
+        const doc = JSON.parse(result.text || '{}');
+        const entities = doc.extracted?.entities || [];
+        const relationships = doc.extracted?.relationships || [];
+        
+        // Track all entities
+        entities.forEach((e: any) => {
+          const key = e.content.toLowerCase();
+          if (!allNodes.has(key)) {
+            allNodes.set(key, {
+              id: e.content,
+              type: e.type,
+              weight: e.weight || 0.5,
+              lastMention: doc.created_at
+            });
+          }
+        });
+        
+        // Track connected entities
+        relationships.forEach((rel: any) => {
+          connectedNodes.add(rel.source.toLowerCase());
+          connectedNodes.add(rel.target.toLowerCase());
+        });
+      } catch (e) {
+        // Skip malformed results
+      }
+    });
+    
+    // Find orphans: nodes with high weight but no connections
+    const orphans = Array.from(allNodes.entries())
+      .filter(([key, node]) => !connectedNodes.has(key) && node.weight > 0.6)
+      .map(([_, node]) => node)
+      .sort((a, b) => b.weight - a.weight);
+    
+    return c.json({
+      success: true,
+      orphans,
+      count: orphans.length,
+      insight: orphans.length > 0 
+        ? `Found ${orphans.length} high-priority items that aren't connected to any actions or goals`
+        : 'All your important thoughts are well connected!'
+    });
+  } catch (error) {
+    return c.json({ 
+      error: 'Orphan detection failed', 
+      message: error instanceof Error ? error.message : 'Unknown error' 
+    }, 500);
+  }
+});
+
+// Pattern detection: find hub nodes (highly connected)
+app.get('/api/patterns/hubs', async (c) => {
+  try {
+    const searchResult = await c.env.AGENT_MEMORY.searchSemanticMemory('all memories');
+    const results = searchResult.documentSearchResponse?.results || [];
+    
+    const connectionCount = new Map<string, number>();
+    const nodeDetails = new Map<string, any>();
+    
+    // Count connections for each node
+    results.forEach((result: any) => {
+      try {
+        const doc = JSON.parse(result.text || '{}');
+        const entities = doc.extracted?.entities || [];
+        const relationships = doc.extracted?.relationships || [];
+        
+        // Store node details
+        entities.forEach((e: any) => {
+          const key = e.content.toLowerCase();
+          if (!nodeDetails.has(key)) {
+            nodeDetails.set(key, {
+              id: e.content,
+              type: e.type
+            });
+          }
+        });
+        
+        // Count connections
+        relationships.forEach((rel: any) => {
+          const sourceKey = rel.source.toLowerCase();
+          const targetKey = rel.target.toLowerCase();
+          
+          connectionCount.set(sourceKey, (connectionCount.get(sourceKey) || 0) + 1);
+          connectionCount.set(targetKey, (connectionCount.get(targetKey) || 0) + 1);
+        });
+      } catch (e) {
+        // Skip malformed results
+      }
+    });
+    
+    // Find hubs: nodes with 3+ connections
+    const hubs = Array.from(connectionCount.entries())
+      .filter(([_, count]) => count >= 3)
+      .map(([key, count]) => ({
+        node: nodeDetails.get(key)?.id || key,
+        type: nodeDetails.get(key)?.type || 'unknown',
+        connections: count,
+        centrality: count / Math.max(...Array.from(connectionCount.values()))
+      }))
+      .sort((a, b) => b.connections - a.connections);
+    
+    return c.json({
+      success: true,
+      hubs,
+      count: hubs.length,
+      insight: hubs.length > 0 && hubs[0]
+        ? `${hubs[0].node} is your most central theme with ${hubs[0].connections} connections`
+        : 'Build more connections to discover your central themes'
+    });
+  } catch (error) {
+    return c.json({ 
+      error: 'Hub detection failed', 
       message: error instanceof Error ? error.message : 'Unknown error' 
     }, 500);
   }
@@ -736,6 +964,18 @@ app.get('/api/config', (c) => {
 
 export default class extends Service<Env> {
   async fetch(request: Request): Promise<Response> {
-    return app.fetch(request, this.env);
+    const response = await app.fetch(request, this.env);
+    
+    // Add CORS headers to every response
+    const newHeaders = new Headers(response.headers);
+    newHeaders.set('Access-Control-Allow-Origin', '*');
+    newHeaders.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    newHeaders.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: newHeaders
+    });
   }
 }

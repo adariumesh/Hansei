@@ -194,6 +194,10 @@
                 <input type="text" id="searchInput" placeholder="Search memories..." value="health goals">
                 <button onclick="loadGraph()">🔍 Search</button>
             </div>
+            <div class="input-group">
+                <input type="text" id="textInput" placeholder="What's on your mind...">
+                <button onclick="submitText()">💾 Save</button>
+            </div>
             <button class="record-btn" id="recordBtn" onclick="toggleRecording()">🎙️ Record</button>
         </div>
     </div>
@@ -233,12 +237,6 @@
                 <span>Objects</span>
             </div>
         </div>
-    </div>
-
-    <div class="text-input-container">
-        <h3>Quick Note</h3>
-        <textarea id="textInput" placeholder="Type your thoughts..."></textarea>
-        <button onclick="submitText()">💾 Save</button>
     </div>
 
     <div class="status" id="status"></div>
@@ -455,14 +453,17 @@
 
         async function submitText() {
             const text = document.getElementById('textInput').value.trim();
-            if (!text) return;
+            if (!text) {
+                alert('Please enter some text');
+                return;
+            }
 
-            showStatus('Saving...');
+            showStatus('Saving text...');
 
             try {
                 const response = await fetch(`${API_BASE}/infer`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify({
                         content: text,
                         user_id: USER_ID
@@ -473,13 +474,15 @@
                 
                 if (result.success) {
                     document.getElementById('textInput').value = '';
-                    showStatus('✅ Saved!', 2000);
+                    showStatus('✅ Saved to memory!', 2000);
                     setTimeout(loadGraph, 1000);
                 } else {
-                    showStatus('❌ Error', 3000);
+                    showStatus('❌ Error: ' + (result.error || 'Unknown'), 3000);
+                    console.error('API error:', result);
                 }
             } catch (err) {
-                showStatus('❌ Failed', 3000);
+                showStatus('❌ Network error', 3000);
+                console.error('Submit error:', err);
             }
         }
 
