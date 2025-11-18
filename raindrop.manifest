@@ -1,0 +1,103 @@
+application "hansei" {
+  
+  # Core memory and graph engine
+  service "memory-core" {
+    visibility = "private"
+  }
+  
+  # AI processing pipeline
+  service "intelligence-pipeline" {
+    visibility = "private"
+  }
+  
+  # Document and search engine
+  service "search-engine" {
+    visibility = "private"  
+  }
+  
+  # Public API gateway
+  service "api-gateway" {
+    visibility = "public"
+  }
+  
+  # Specialized processing services
+  service "entity-resolver" {
+    visibility = "private"
+  }
+  
+  service "pattern-detector" {
+    visibility = "private"
+  }
+  
+  service "voice-processor" {
+    visibility = "private"
+  }
+  
+  service "document-processor" {
+    visibility = "private"
+  }
+  
+  
+  # Memory and storage systems
+  smartmemory "agent-memory" {
+  }
+  
+  smartsql "graph-database" {
+  }
+  
+  smartbucket "document-storage" {
+  }
+  
+  smartbucket "audio-storage" {
+  }
+  
+  # Vector storage for embeddings
+  vector_index "memory-embeddings" {
+    dimensions = 1536
+    metric = "cosine"
+  }
+  
+  vector_index "document-embeddings" {
+    dimensions = 1536
+    metric = "cosine"
+  }
+  
+  # Processing queues
+  queue "processing-queue" {
+  }
+  
+  queue "analysis-queue" {
+  }
+  
+  # Background processing observers
+  observer "audio-processor" {
+    source {
+      bucket = "audio-storage"
+    }
+  }
+  
+  observer "document-analyzer" {
+    source {
+      bucket = "document-storage"
+    }
+  }
+  
+  observer "batch-processor" {
+    source {
+      queue = "processing-queue"
+    }
+  }
+  
+  observer "insight-generator" {
+    source {
+      queue = "analysis-queue"
+    }
+  }
+  
+  # Key-value cache for performance
+  kv_cache "session-cache" {
+  }
+  
+  kv_cache "query-cache" {
+  }
+}
