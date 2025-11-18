@@ -49,6 +49,50 @@
             margin-bottom: 20px;
         }
 
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            header h1 {
+                font-size: 2em;
+            }
+            
+            header p {
+                font-size: 1em;
+            }
+            
+            .main-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .card {
+                padding: 15px;
+            }
+            
+            .record-btn {
+                width: 80px;
+                height: 80px;
+                font-size: 1.5em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+            
+            .card {
+                padding: 12px;
+            }
+            
+            .card h2 {
+                font-size: 1.3em;
+            }
+        }
+
         .card {
             background: white;
             border-radius: 15px;
@@ -272,6 +316,276 @@
             color: #c33;
         }
 
+        /* Chat Interface Styles */
+        .chat-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 350px;
+            height: 500px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .chat-container.open {
+            transform: translateX(0);
+        }
+
+        .chat-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            cursor: pointer;
+            font-size: 1.5em;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            z-index: 1001;
+            transition: all 0.3s;
+        }
+
+        .chat-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px 15px 0 0;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            max-height: 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chat-message {
+            max-width: 80%;
+            padding: 12px 15px;
+            border-radius: 18px;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .chat-message.user {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+
+        .chat-message.hansei {
+            background: #f8f9fa;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            align-self: flex-start;
+        }
+
+        .chat-message.hansei .source-hint {
+            font-size: 0.8em;
+            color: #667eea;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .chat-input-container {
+            padding: 15px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 20px;
+            font-size: 0.9em;
+            outline: none;
+            resize: none;
+            max-height: 60px;
+        }
+
+        .chat-input:focus {
+            border-color: #667eea;
+        }
+
+        .chat-send {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        .chat-send:hover {
+            transform: translateY(-2px);
+        }
+
+        .chat-send:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .insights-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            margin-left: 10px;
+            transition: all 0.3s;
+        }
+
+        .insights-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(240, 147, 251, 0.4);
+        }
+
+        .insights-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .insights-modal.open {
+            display: flex;
+        }
+
+        .insights-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            max-height: 70vh;
+            overflow-y: auto;
+            margin: 20px;
+        }
+
+        .insights-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .insights-close {
+            background: #f55;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .insight-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .insight-item h4 {
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .insight-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .insight-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .insight-list li:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .insight-results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .insight-results h5 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .insight-results ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .insight-results li {
+            padding: 8px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 5px;
+            border-left: 3px solid #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .chat-container {
+                width: calc(100vw - 40px);
+                height: calc(100vh - 40px);
+                top: 20px;
+                right: 20px;
+            }
+            
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            header h1 {
+                font-size: 2em;
+            }
+        }
+
         @media (max-width: 768px) {
             .main-grid {
                 grid-template-columns: 1fr;
@@ -281,32 +595,219 @@
                 font-size: 2em;
             }
         }
+
+        /* Loading and Toast Notifications */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-overlay p {
+            color: white;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .error-toast, .success-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            max-width: 400px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            z-index: 9000;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .error-toast {
+            background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+        }
+
+        .success-toast {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        }
+
+        .error-toast button, .success-toast button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2em;
+            cursor: pointer;
+            margin-left: 10px;
+            padding: 0 5px;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Enhanced Loading States */
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #667eea;
+            font-style: italic;
+        }
+
+        .loading::before {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Accessibility Improvements */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Focus indicators */
+        button:focus, input:focus, textarea:focus {
+            outline: 3px solid #667eea;
+            outline-offset: 2px;
+        }
+
+        /* Reduced motion for accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>Processing your request...</p>
+    </div>
+
+    <!-- Error Toast -->
+    <div id="errorToast" class="error-toast" style="display: none;">
+        <span id="errorMessage"></span>
+        <button id="closeError" aria-label="Close error message">✕</button>
+    </div>
+
+    <!-- Success Toast -->
+    <div id="successToast" class="success-toast" style="display: none;">
+        <span id="successMessage"></span>
+        <button id="closeSuccess" aria-label="Close success message">✕</button>
+    </div>
+
     <div class="container">
-        <header>
-            <h1>⏺ HANSEI</h1>
+        <header role="banner">
+            <h1 id="mainTitle">⏺ HANSEI</h1>
             <p>Your AI-Powered Memory & Knowledge Graph</p>
         </header>
+
+        <!-- Chat Toggle Button -->
+        <button 
+            class="chat-toggle" 
+            id="chatToggle"
+            aria-label="Toggle chat interface"
+            aria-expanded="false"
+            aria-controls="chatContainer"
+        >💬</button>
+
+        <!-- Chat Container -->
+        <div class="chat-container" id="chatContainer">
+            <div class="chat-header">
+                💭 Chat with HANSEI
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="chat-message hansei">
+                    Hello! I'm HANSEI, your memory companion. Ask me anything about your stored memories and I'll help you discover patterns and insights! 🧠
+                </div>
+            </div>
+            <div class="chat-input-container">
+                <textarea 
+                    class="chat-input" 
+                    id="chatInput" 
+                    placeholder="Ask about your memories..."
+                    rows="1"
+                ></textarea>
+                <button class="chat-send" id="chatSend">Send</button>
+            </div>
+        </div>
 
         <div class="main-grid">
             <!-- Voice Input Section -->
             <div class="card">
-                <h2>🎤 Capture Memory</h2>
-                <div class="voice-controls">
-                    <button class="record-btn" id="recordBtn" title="Click to record">🎙️</button>
-                    <div class="status" id="status">Ready to record</div>
+                <h2 id="captureHeading">🎤 Capture Memory</h2>
+                <div class="voice-controls" role="region" aria-labelledby="captureHeading">
+                    <button 
+                        class="record-btn" 
+                        id="recordBtn" 
+                        aria-label="Start voice recording"
+                        aria-describedby="status"
+                        title="Click to record">🎙️</button>
+                    <div class="status" id="status" role="status" aria-live="polite">Ready to record</div>
                     
-                    <div style="text-align: center; margin: 15px 0; color: #999;">or</div>
+                    <div style="text-align: center; margin: 15px 0; color: #999;" aria-hidden="true">or</div>
                     
+                    <label for="textInput" class="sr-only">Type your thoughts</label>
                     <textarea 
                         class="text-input" 
                         id="textInput" 
                         placeholder="Type your thoughts here..."
+                        aria-label="Type your thoughts here"
                     ></textarea>
                     
-                    <button class="submit-btn" id="submitBtn">💾 Save to Memory</button>
+                    <button class="submit-btn" id="submitBtn" aria-describedby="status">
+                        <span aria-hidden="true">💾</span> Save to Memory
+                    </button>
                 </div>
 
                 <div style="margin-top: 30px;">
@@ -317,19 +818,26 @@
 
             <!-- Graph Visualization Section -->
             <div class="card">
-                <h2>🧠 Knowledge Graph</h2>
-                <div class="search-box">
+                <h2 id="graphHeading">🧠 Knowledge Graph</h2>
+                <div class="search-box" role="search" aria-labelledby="graphHeading">
+                    <label for="searchInput" class="sr-only">Search your memories</label>
                     <input 
                         type="text" 
                         class="search-input" 
                         id="searchInput" 
                         placeholder="Search your memories..."
                         value="health goals running"
+                        aria-label="Search your memories"
                     />
-                    <button class="search-btn" id="searchBtn">🔍 Search</button>
+                    <button class="search-btn" id="searchBtn" aria-describedby="results">
+                        <span aria-hidden="true">🔍</span> Search
+                    </button>
+                    <button class="insights-btn" id="insightsBtn" aria-haspopup="dialog">
+                        <span aria-hidden="true">🧠</span> Insights
+                    </button>
                 </div>
                 
-                <div id="graph"></div>
+                <div id="graph" role="img" aria-label="Knowledge graph visualization"></div>
                 
                 <div class="graph-stats">
                     <div class="stat">
@@ -359,13 +867,199 @@
 
     <script>
         // Configuration
-        const API_BASE = 'https://svc-01ka9za29rb1k3xhtqxxe8qn20.01ka4j4ktmq3vmg0nfmg652rkw.lmapp.run';
+        const API_BASE = 'https://svc-01kaaeej1ecf9k85z0f29rp6wf.01ka41m1warcc7s5zveqw1tt3z.lmapp.run';
         const USER_ID = 'demo_user_' + Date.now();
 
         // State
         let mediaRecorder = null;
         let audioChunks = [];
         let network = null;
+        let chatOpen = false;
+        let conversationId = 'conv_' + Date.now();
+
+        // Chat functionality
+        function initChat() {
+            const chatToggle = document.getElementById('chatToggle');
+            const chatContainer = document.getElementById('chatContainer');
+            const chatSend = document.getElementById('chatSend');
+            const chatInput = document.getElementById('chatInput');
+
+            // Toggle chat
+            chatToggle.addEventListener('click', () => {
+                chatOpen = !chatOpen;
+                chatContainer.classList.toggle('open', chatOpen);
+                if (chatOpen && chatInput) {
+                    setTimeout(() => chatInput.focus(), 300);
+                }
+            });
+
+            // Send message
+            chatSend.addEventListener('click', () => sendChatMessage());
+            
+            // Enter key to send
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendChatMessage();
+                }
+            });
+
+            // Auto-resize textarea
+            chatInput.addEventListener('input', () => {
+                chatInput.style.height = 'auto';
+                chatInput.style.height = (chatInput.scrollHeight) + 'px';
+            });
+        }
+
+        async function sendChatMessage() {
+            const chatInput = document.getElementById('chatInput');
+            const chatMessages = document.getElementById('chatMessages');
+            const message = chatInput.value.trim();
+
+            if (!message) return;
+
+            // Add user message to chat
+            addChatMessage(message, 'user');
+            chatInput.value = '';
+            chatInput.style.height = 'auto';
+
+            try {
+                // Send to HANSEI API
+                const response = await fetch(`${API_BASE}/api/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        conversation_id: conversationId,
+                        user_id: USER_ID
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Add HANSEI response
+                    let responseText = result.answer || 'I received your message but couldn\'t generate a response.';
+                    let sources = result.sources || [];
+                    
+                    addChatMessage(responseText, 'hansei', sources);
+                } else {
+                    addChatMessage('Sorry, I encountered an error: ' + (result.error || 'Unknown error'), 'hansei');
+                }
+            } catch (error) {
+                console.error('Chat error:', error);
+                addChatMessage('Sorry, I\'m having trouble connecting right now. Please try again.', 'hansei');
+            }
+        }
+
+        function addChatMessage(text, sender, sources = []) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${sender}`;
+            
+            let messageHtml = text;
+            
+            // Add sources if available
+            if (sources && sources.length > 0) {
+                const sourceHint = sources.length === 1 
+                    ? 'Based on 1 memory' 
+                    : `Based on ${sources.length} memories`;
+                messageHtml += `<div class="source-hint">${sourceHint}</div>`;
+            }
+            
+            messageDiv.innerHTML = messageHtml;
+            chatMessages.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Insights functionality
+        function initInsights() {
+            const insightsBtn = document.getElementById('insightsBtn');
+            const insightsModal = document.getElementById('insightsModal');
+            const insightsClose = document.getElementById('insightsClose');
+
+            insightsBtn.addEventListener('click', () => {
+                insightsModal.classList.add('open');
+            });
+
+            insightsClose.addEventListener('click', () => {
+                insightsModal.classList.remove('open');
+            });
+
+            // Close modal on outside click
+            insightsModal.addEventListener('click', (e) => {
+                if (e.target === insightsModal) {
+                    insightsModal.classList.remove('open');
+                }
+            });
+        }
+
+        async function loadOrphans() {
+            const resultsDiv = document.getElementById('insightResults');
+            resultsDiv.innerHTML = '<div class="loading">Loading orphaned nodes...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/patterns/orphans`);
+                const result = await response.json();
+
+                if (response.ok) {
+                    displayInsightResults('Orphaned Nodes', result.orphans || [], 'These nodes have few connections and might represent isolated memories.');
+                } else {
+                    resultsDiv.innerHTML = `<div class="error">Failed to load orphaned nodes: ${result.message || 'Unknown error'}</div>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">Network error: ${error.message}</div>`;
+            }
+        }
+
+        async function loadHubs() {
+            const resultsDiv = document.getElementById('insightResults');
+            resultsDiv.innerHTML = '<div class="loading">Loading hub analysis...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/patterns/hubs`);
+                const result = await response.json();
+
+                if (response.ok) {
+                    displayInsightResults('Hub Analysis', result.hubs || [], 'These are highly connected nodes that serve as central themes in your memories.');
+                } else {
+                    resultsDiv.innerHTML = `<div class="error">Failed to load hub analysis: ${result.message || 'Unknown error'}</div>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">Network error: ${error.message}</div>`;
+            }
+        }
+
+        function displayInsightResults(title, items, description) {
+            const resultsDiv = document.getElementById('insightResults');
+            
+            if (!items || items.length === 0) {
+                resultsDiv.innerHTML = `
+                    <h5>${title}</h5>
+                    <p>${description}</p>
+                    <p><em>No results found. Try adding more memories!</em></p>
+                `;
+                return;
+            }
+
+            let itemsHtml = items.map(item => {
+                if (typeof item === 'string') {
+                    return `<li>${item}</li>`;
+                } else {
+                    return `<li><strong>${item.name || item.label || 'Unknown'}:</strong> ${item.description || item.type || 'No description'}</li>`;
+                }
+            }).join('');
+
+            resultsDiv.innerHTML = `
+                <h5>${title}</h5>
+                <p>${description}</p>
+                <ul>${itemsHtml}</ul>
+            `;
+        }
 
         // Initialize graph
         function initGraph() {
@@ -653,11 +1347,34 @@
 
         // Initialize
         initGraph();
+        initChat();
+        initInsights();
         
         // Auto-search on load
         setTimeout(() => {
             document.getElementById('searchBtn').click();
         }, 500);
     </script>
+
+    <!-- Insights Modal -->
+    <div class="insights-modal" id="insightsModal">
+        <div class="insights-content">
+            <div class="insights-header">
+                <h3>🧠 Memory Insights</h3>
+                <button class="insights-close" id="insightsClose">&times;</button>
+            </div>
+            <div class="insights-body">
+                <div class="insight-item">
+                    <h4>🔍 Pattern Detection</h4>
+                    <div class="insight-list">
+                        <button class="insights-btn" onclick="loadOrphans()">🔗 Orphaned Nodes</button>
+                        <button class="insights-btn" onclick="loadHubs()">🌟 Hub Analysis</button>
+                    </div>
+                </div>
+                <div id="insightResults" class="insight-results"></div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
