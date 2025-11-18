@@ -46,6 +46,12 @@ server {
     gzip_min_length 1024;
     gzip_types text/plain text/css text/xml text/javascript application/javascript application/json;
 
+    # 3D visualization route
+    location = /3d {
+        try_files /index-3d.html =404;
+        add_header Cache-Control "public, max-age=3600";
+    }
+
     # Main location
     location / {
         try_files $uri $uri/ =404;
