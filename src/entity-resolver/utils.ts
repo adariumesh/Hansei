@@ -254,13 +254,92 @@ export function calculateNameSimilarity(name1: string, name2: string): number {
   // Exact match
   if (norm1 === norm2) return 1.0;
   
-  // Levenshtein distance based similarity
-  const distance = levenshteinDistance(norm1, norm2);
-  const maxLength = Math.max(norm1.length, norm2.length);
+  // Handle edge cases that are semantically similar
+  const edgeCaseScore = checkSemanticEdgeCases(norm1, norm2);
+  if (edgeCaseScore > 0) return edgeCaseScore;
+  
+  // Multi-algorithm similarity scoring
+  const levenshteinScore = calculateLevenshteinSimilarity(norm1, norm2);
+  const jaccardScore = calculateJaccardSimilarity(norm1, norm2);
+  const substringScore = calculateSubstringSimilarity(norm1, norm2);
+  
+  // Weighted combination for better accuracy
+  return (levenshteinScore * 0.5 + jaccardScore * 0.3 + substringScore * 0.2);
+}
+
+function checkSemanticEdgeCases(name1: string, name2: string): number {
+  // Common abbreviation patterns
+  const abbreviationPairs = [
+    ['artificial intelligence', 'ai'],
+    ['machine learning', 'ml'],
+    ['natural language processing', 'nlp'],
+    ['united states', 'usa', 'us'],
+    ['university', 'univ'],
+    ['corporation', 'corp'],
+    ['company', 'co'],
+    ['doctor', 'dr'],
+    ['professor', 'prof']
+  ];
+  
+  const lower1 = name1.toLowerCase();
+  const lower2 = name2.toLowerCase();
+  
+  for (const group of abbreviationPairs) {
+    if ((group.includes(lower1) && group.includes(lower2)) ||
+        (group.some(term => lower1.includes(term)) && group.some(term => lower2.includes(term)))) {
+      return 0.95;
+    }
+  }
+  
+  // Handle initials (e.g., "J. Smith" vs "John Smith")
+  if (isInitialMatch(lower1, lower2)) {
+    return 0.85;
+  }
+  
+  return 0;
+}
+
+function isInitialMatch(name1: string, name2: string): boolean {
+  const words1 = name1.split(/\s+/);
+  const words2 = name2.split(/\s+/);
+  
+  if (words1.length !== words2.length) return false;
+  
+  return words1.every((word1, index) => {
+    const word2 = words2[index];
+    // Check if one is initial of the other
+    return (word1.length === 1 && word2.startsWith(word1)) ||
+           (word2.length === 1 && word1.startsWith(word2)) ||
+           word1 === word2;
+  });
+}
+
+function calculateLevenshteinSimilarity(name1: string, name2: string): number {
+  const distance = levenshteinDistance(name1, name2);
+  const maxLength = Math.max(name1.length, name2.length);
   
   if (maxLength === 0) return 1.0;
-  
   return Math.max(0, 1 - (distance / maxLength));
+}
+
+function calculateJaccardSimilarity(name1: string, name2: string): number {
+  const tokens1 = new Set(name1.split(/\s+/));
+  const tokens2 = new Set(name2.split(/\s+/));
+  
+  const intersection = new Set([...tokens1].filter(x => tokens2.has(x)));
+  const union = new Set([...tokens1, ...tokens2]);
+  
+  if (union.size === 0) return 1.0;
+  return intersection.size / union.size;
+}
+
+function calculateSubstringSimilarity(name1: string, name2: string): number {
+  if (name1.includes(name2) || name2.includes(name1)) {
+    const minLength = Math.min(name1.length, name2.length);
+    const maxLength = Math.max(name1.length, name2.length);
+    return minLength / maxLength;
+  }
+  return 0;
 }
 
 export function calculateAliasMatch(entity1: Entity, entity2: Entity): number {
@@ -297,8 +376,43 @@ export function normalizeEntity(entity: Entity): Entity {
     id: entity.id || generateId(),
     name: normalizeText(entity.name),
     normalized_name: normalizeText(entity.name),
-    confidence: Math.max(0, Math.min(1, entity.confidence || 0.5))
+    confidence: calculateEnhancedConfidenceScore(entity)
   };
+}
+
+function calculateEnhancedConfidenceScore(entity: Entity): number {
+  let baseConfidence = entity.confidence || 0.5;
+  
+  // Name quality factors
+  if (entity.name) {
+    if (entity.name.length < 2) baseConfidence *= 0.7; // Very short names are less reliable
+    if (entity.name.length > 50) baseConfidence *= 0.8; // Very long names might be incorrect
+    if (/^[A-Z][a-z]+(\s[A-Z][a-z]+)*$/.test(entity.name)) baseConfidence += 0.1; // Proper capitalization
+    if (!/\d/.test(entity.name) && entity.type === 'person') baseConfidence += 0.05; // Names without numbers
+  }
+  
+  // Type-specific confidence adjustments
+  if (entity.type === 'person' && entity.name) {
+    const nameParts = entity.name.split(/\s+/);
+    if (nameParts.length >= 2) baseConfidence += 0.1; // First and last name
+    if (nameParts.length > 3) baseConfidence -= 0.05; // Too many name parts might be incorrect
+  }
+  
+  if (entity.type === 'organization' && entity.name) {
+    if (/\b(inc|corp|llc|ltd|company|co)\b/i.test(entity.name)) baseConfidence += 0.1;
+  }
+  
+  if (entity.type === 'location' && entity.name) {
+    if (/,\s*[A-Z]{2}$/.test(entity.name)) baseConfidence += 0.1; // City, State format
+  }
+  
+  // Context and metadata factors
+  if (entity.metadata?.source === 'verified') baseConfidence += 0.2;
+  if (entity.metadata?.extraction_method === 'pattern_based') baseConfidence += 0.05;
+  if (entity.aliases && entity.aliases.length > 0) baseConfidence += 0.1;
+  
+  // Ensure confidence is within bounds
+  return Math.max(0.1, Math.min(1.0, baseConfidence));
 }
 
 export function normalizeText(text: string): string {
