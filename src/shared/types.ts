@@ -20,6 +20,7 @@ export interface ErrorDetail {
 
 export interface ValidationError {
   type: 'validation';
+  message?: string;
   details: ErrorDetail[];
 }
 

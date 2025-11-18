@@ -15,7 +15,6 @@ import {
   EnhancedSearchResult
 } from './interfaces.js';
 import { 
-  generateRequestId, 
   measureTime, 
   validateRequiredString,
   createValidationError 
@@ -218,4 +217,37 @@ async function processDocumentForIndexing(document: any) {
 
 function generateRequestId(): string {
   return `req_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+}
+
+function createSuccessResponse(requestId: string, startTime: number, data: any, metadata?: any): ComponentResponse {
+  return {
+    id: requestId,
+    status: 'success',
+    result: data,
+    processing_time_ms: Date.now() - startTime,
+    metadata: {
+      processed_at: new Date().toISOString(),
+      query: data.query,
+      ...metadata
+    },
+    created_at: new Date().toISOString()
+  };
+}
+
+function createFailedResponse(requestId: string, startTime: number, error: string, metadata?: any): ComponentResponse {
+  return {
+    id: requestId,
+    status: 'failed',
+    result: { error },
+    processing_time_ms: Date.now() - startTime,
+    metadata: {
+      processed_at: new Date().toISOString(),
+      ...metadata
+    },
+    created_at: new Date().toISOString()
+  };
+}
+
+function normalizeQuery(query: string): string {
+  return query.trim().toLowerCase().replace(/\s+/g, ' ');
 }

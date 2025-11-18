@@ -4,7 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HANSEI - 3D Memory Graph</title>
-    <script src="https://unpkg.com/3d-force-graph"></script>
+    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/@react-three/drei@9.88.17/core/index.js"></script>
+    <script src="https://unpkg.com/3d-force-graph@1.73.2/dist/3d-force-graph.min.js"></script>
+    <script src="https://unpkg.com/troika-three-text@0.47.2/dist/troika-three-text.umd.min.js"></script>
+    <!-- ElevenLabs Voice Agent SDK -->
+    <script src="https://unpkg.com/@elevenlabs/client@latest/dist/index.umd.js"></script>
+    <script src="voice-agent.js"></script>
     <style>
         * {
             margin: 0;
@@ -13,10 +19,25 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0a0e27;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1a2e 50%, #16213e 100%);
             color: white;
             overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 20%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+                       radial-gradient(circle at 80% 80%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
+                       radial-gradient(circle at 40% 40%, rgba(120, 198, 198, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
         }
 
         #header {
@@ -24,11 +45,13 @@
             top: 0;
             left: 0;
             right: 0;
-            background: rgba(10, 14, 39, 0.95);
-            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(25px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 0 0 20px 20px;
             padding: 20px;
             z-index: 1000;
-            border-bottom: 2px solid #667eea;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
         h1 {
@@ -91,6 +114,16 @@
             animation: pulse 1.5s infinite;
         }
 
+        .voice-agent-btn {
+            padding: 12px 24px;
+            border-radius: 50px;
+        }
+
+        .voice-agent-btn.active {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            animation: pulse 1.5s infinite;
+        }
+
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.05); }
@@ -108,13 +141,21 @@
             position: fixed;
             bottom: 20px;
             left: 20px;
-            background: rgba(10, 14, 39, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 20px;
-            border-radius: 15px;
-            border: 2px solid #667eea;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(25px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 25px;
+            border-radius: 20px;
             max-width: 350px;
             z-index: 999;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #info-panel:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
         }
 
         .stat {
@@ -391,7 +432,7 @@
                     type="text" 
                     id="searchInput" 
                     placeholder="Search memories..." 
-                    value="health goals"
+                    value="all"
                     aria-label="Search memories"
                 >
                 <button onclick="loadGraph()" aria-describedby="graph-container">
@@ -412,6 +453,9 @@
             </div>
             <button class="record-btn" id="recordBtn" onclick="toggleRecording()" aria-label="Start voice recording">
                 <span aria-hidden="true">🎙️</span> Record
+            </button>
+            <button class="voice-agent-btn" id="voiceAgentBtn" onclick="toggleVoiceAgent()" aria-label="Toggle AI voice agent">
+                <span aria-hidden="true">🤖</span> Voice Agent
             </button>
         </div>
     </div>
@@ -457,36 +501,367 @@
 
     <script>
         const API_BASE = 'https://svc-01kaaeej1ecf9k85z0f29rp6wf.01ka41m1warcc7s5zveqw1tt3z.lmapp.run';
-        const USER_ID = 'demo_user_' + Date.now();
+        const USER_ID = 'demo_user_anne_frank_1';
+        // ElevenLabs configuration - Replace with your actual credentials
+        const ELEVENLABS_API_KEY = 'your_elevenlabs_api_key_here';
+        const ELEVENLABS_AGENT_ID = 'your_agent_id_here';
 
         let Graph;
         let mediaRecorder = null;
         let audioChunks = [];
+        let voiceAgent = null;
 
-        // Initialize 3D Graph
+        // Initialize Advanced 3D Graph with Glassmorphism
         function initGraph() {
             const container = document.getElementById('graph-container');
             
             Graph = ForceGraph3D()(container)
-                .backgroundColor('#0a0e27')
-                .nodeLabel('label')
-                .nodeAutoColorBy('type')
-                .nodeVal(node => node.weight * 10)
-                .nodeColor(node => getNodeColor(node.type))
-                .linkColor(() => 'rgba(255,255,255,0.2)')
-                .linkWidth(2)
-                .linkDirectionalParticles(2)
-                .linkDirectionalParticleWidth(2)
-                .linkDirectionalParticleSpeed(0.005)
+                .backgroundColor('rgba(10, 14, 39, 0)')
+                .showNavInfo(false)
+                .nodeLabel(node => `
+                    <div style="
+                        background: rgba(255, 255, 255, 0.1);
+                        backdrop-filter: blur(10px);
+                        border: 1px solid rgba(255, 255, 255, 0.2);
+                        border-radius: 8px;
+                        padding: 8px 12px;
+                        color: white;
+                        font-size: 12px;
+                        white-space: nowrap;
+                        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+                    ">
+                        <strong>${node.label}</strong><br>
+                        ${node.type} • Level ${node.level}
+                    </div>
+                `)
+                .nodeThreeObject(node => createGlassmorphNode(node))
+                .nodeVal(node => {
+                    // Central node should be largest
+                    if (node.id === 'central') return 35;
+                    if (node.level === 1) return 25;
+                    return Math.max(node.weight * 15, 8);
+                })
+                .linkThreeObject(link => createGlassmorphLink(link))
+                .linkPositionUpdate((obj, { start, end }) => {
+                    Object.assign(obj.position, start);
+                    obj.lookAt(end.x, end.y, end.z);
+                    obj.scale.z = start.distanceTo(end);
+                })
                 .onNodeClick(node => {
                     showStatus(`${node.type}: ${node.label}`);
+                    // Animate camera to focus on clicked node
+                    const distance = 100;
+                    const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+                    Graph.cameraPosition(
+                        { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio },
+                        node,
+                        1000
+                    );
                 })
                 .onNodeHover(node => {
                     container.style.cursor = node ? 'pointer' : null;
+                    if (node && node.__threeObj) {
+                        // Hover effect: slight glow
+                        node.__threeObj.material.emissiveIntensity = 0.3;
+                    }
+                })
+                .onNodeDragEnd(node => {
+                    node.fx = node.x;
+                    node.fy = node.y;
+                    node.fz = node.z;
                 });
 
-            // Camera settings for better view
-            Graph.cameraPosition({ z: 300 });
+            // Enhanced camera settings for cinematic view
+            Graph.cameraPosition({ x: 0, y: 200, z: 400 });
+            Graph.controls().enableDamping = true;
+            Graph.controls().dampingFactor = 0.05;
+
+            // Enhanced lighting for better visualization
+            const scene = Graph.scene();
+            
+            // Remove default lights
+            scene.children.filter(child => child.isLight).forEach(light => scene.remove(light));
+            
+            // Enhanced ambient light for overall illumination
+            const ambientLight = new THREE.AmbientLight(0x404040, 2.5);
+            scene.add(ambientLight);
+
+            // Directional light for depth and shadows
+            const dirLight1 = new THREE.DirectionalLight(0xffffff, 1.5);
+            dirLight1.position.set(100, 100, 100);
+            scene.add(dirLight1);
+
+            const dirLight2 = new THREE.DirectionalLight(0x667eea, 0.8);
+            dirLight2.position.set(-100, 50, -100);
+            scene.add(dirLight2);
+
+            // Point light at center for central node glow
+            const centerLight = new THREE.PointLight('#667eea', 3, 500);
+            centerLight.position.set(0, 0, 0);
+            scene.add(centerLight);
+
+            // Hemisphere light for ambient fill
+            const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
+            hemiLight.position.set(0, 200, 0);
+            scene.add(hemiLight);
+
+            // Accent lights for visual depth
+            const accentLight1 = new THREE.PointLight('#f093fb', 2, 300);
+            accentLight1.position.set(200, 100, 200);
+            scene.add(accentLight1);
+
+            const accentLight2 = new THREE.PointLight('#43e97b', 2, 300);
+            accentLight2.position.set(-200, -100, -200);
+            scene.add(accentLight2);
+        }
+
+        // Create glassmorphism memory nodes
+        function createGlassmorphNode(node) {
+            const nodeSize = Graph.nodeVal()(node);
+            const geometry = new THREE.IcosahedronGeometry(nodeSize, 2);
+            
+            // Glassmorphism material
+            const material = new THREE.MeshPhysicalMaterial({
+                color: new THREE.Color(getNodeColor(node.type)),
+                transparent: true,
+                opacity: 0.1,
+                roughness: 0.1,
+                metalness: 0.1,
+                transmission: 0.9,
+                thickness: 0.5,
+                envMapIntensity: 1.5,
+                clearcoat: 1.0,
+                clearcoatRoughness: 0.1,
+                reflectivity: 0.8,
+                ior: 1.5,
+            });
+
+            const mesh = new THREE.Mesh(geometry, material);
+            
+            // Add rim light effect
+            const rimGeometry = new THREE.IcosahedronGeometry(nodeSize * 1.05, 1);
+            const rimMaterial = new THREE.MeshBasicMaterial({
+                color: getNodeColor(node.type),
+                transparent: true,
+                opacity: 0.3,
+                side: THREE.BackSide,
+            });
+            const rim = new THREE.Mesh(rimGeometry, rimMaterial);
+            
+            // Create node group
+            const group = new THREE.Group();
+            group.add(mesh);
+            group.add(rim);
+
+            // Add text label using troika-three-text
+            if (window.troikaThreeText) {
+                const textMesh = new window.troikaThreeText.Text();
+                textMesh.text = node.label;
+                textMesh.fontSize = nodeSize * 0.3;
+                textMesh.color = '#ffffff';
+                textMesh.anchorX = 'center';
+                textMesh.anchorY = 'middle';
+                textMesh.position.set(0, nodeSize + 15, 0);
+                textMesh.material.transparent = true;
+                textMesh.material.opacity = 0.9;
+                group.add(textMesh);
+                textMesh.sync();
+            }
+            
+            // Store reference for hover effects
+            node.__threeObj = mesh;
+            
+            return group;
+        }
+
+        // Create glassmorphism links
+        function createGlassmorphLink(link) {
+            const geometry = new THREE.CylinderGeometry(0.5, 0.5, 1, 8);
+            const material = new THREE.MeshPhysicalMaterial({
+                color: 0x667eea,
+                transparent: true,
+                opacity: 0.15,
+                roughness: 0.1,
+                metalness: 0.1,
+                transmission: 0.8,
+                thickness: 0.1,
+            });
+            
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.rotation.x = Math.PI / 2;
+            
+            return mesh;
+        }
+
+        // ADVANCED ORBITAL PHYSICS: Solar System Model with Gravitational Forces
+        function applyOrbitalPhysics() {
+            const graphData = Graph.graphData();
+            const ORBITAL_CONFIG = {
+                0: { radius: 0, speed: 0, inclination: 0 },           // Central "You" node
+                1: { radius: 200, speed: 0.001, inclination: 0.1 },   // Domain nodes (inner orbit)
+                2: { radius: 380, speed: 0.0005, inclination: 0.2 }   // Entity nodes (outer orbit)
+            };
+
+            // Enhanced orbital mechanics with physics simulation
+            Graph.d3Force('orbital-gravity', alpha => {
+                const time = Date.now() * 0.001;
+                
+                graphData.nodes.forEach((node, index) => {
+                    if (node.level !== undefined) {
+                        const config = ORBITAL_CONFIG[node.level] || ORBITAL_CONFIG[2];
+                        
+                        if (node.id === 'central') {
+                            // Central node stays at origin (gravitational center)
+                            node.fx = 0;
+                            node.fy = 0;
+                            node.fz = 0;
+                        } else {
+                            // Calculate orbital position with slight randomization
+                            const angleOffset = (index * 2.4) + (time * config.speed);
+                            const verticalOffset = Math.sin(time * config.speed * 2) * config.inclination * 20;
+                            
+                            const targetX = Math.cos(angleOffset) * config.radius;
+                            const targetY = verticalOffset;
+                            const targetZ = Math.sin(angleOffset) * config.radius;
+                            
+                            // Gravitational pull toward orbital shell
+                            const dx = node.x || 0;
+                            const dy = node.y || 0;
+                            const dz = node.z || 0;
+                            
+                            const currentRadius = Math.sqrt(dx * dx + dy * dy + dz * dz);
+                            const targetRadius = config.radius;
+                            
+                            if (currentRadius > 0) {
+                                // Radial force (gravity/centrifugal balance)
+                                const radiusError = currentRadius - targetRadius;
+                                const radialForce = -radiusError * alpha * 0.3;
+                                
+                                node.vx += (dx / currentRadius) * radialForce;
+                                node.vy += (dy / currentRadius) * radialForce;
+                                node.vz += (dz / currentRadius) * radialForce;
+                                
+                                // Tangential force (orbital motion)
+                                const tangentialForce = alpha * 0.05;
+                                node.vx += (targetX - dx) * tangentialForce;
+                                node.vy += (targetY - dy) * tangentialForce * 0.1;
+                                node.vz += (targetZ - dz) * tangentialForce;
+                            }
+                            
+                            // Add gentle rotation animation to nodes
+                            if (node.__threeObj && node.__threeObj.parent) {
+                                node.__threeObj.parent.rotation.y = time * 0.2;
+                                node.__threeObj.parent.rotation.x = Math.sin(time * 0.1) * 0.1;
+                            }
+                        }
+                    }
+                });
+            });
+
+            // Add inter-orbital gravitational attractions
+            Graph.d3Force('inter-gravity', alpha => {
+                graphData.nodes.forEach(nodeA => {
+                    if (nodeA.id === 'central') return;
+                    
+                    graphData.nodes.forEach(nodeB => {
+                        if (nodeA === nodeB || nodeB.id === 'central') return;
+                        
+                        const dx = (nodeB.x || 0) - (nodeA.x || 0);
+                        const dy = (nodeB.y || 0) - (nodeA.y || 0);
+                        const dz = (nodeB.z || 0) - (nodeA.z || 0);
+                        const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+                        
+                        if (distance > 0 && distance < 100) {
+                            // Weak attractive force between related nodes
+                            const force = alpha * 0.01 / (distance * distance);
+                            nodeA.vx += dx * force;
+                            nodeA.vy += dy * force;
+                            nodeA.vz += dz * force;
+                        }
+                    });
+                });
+            });
+
+            // Apply damping for stability
+            Graph.d3Force('damping', alpha => {
+                const damping = 0.95;
+                graphData.nodes.forEach(node => {
+                    if (node.id !== 'central') {
+                        node.vx *= damping;
+                        node.vy *= damping;
+                        node.vz *= damping;
+                    }
+                });
+            });
+
+            // Restart simulation with enhanced forces
+            Graph.d3ReheatSimulation();
+            
+            // Add ambient lighting and environment
+            addAmbientEnvironment();
+        }
+
+        // Create immersive spatial environment
+        function addAmbientEnvironment() {
+            const scene = Graph.scene();
+            
+            // Add ambient lighting for glassmorphism
+            const ambientLight = new THREE.AmbientLight(0x404080, 0.3);
+            scene.add(ambientLight);
+            
+            // Add directional light for depth
+            const directionalLight = new THREE.DirectionalLight(0x667eea, 0.5);
+            directionalLight.position.set(200, 200, 100);
+            scene.add(directionalLight);
+            
+            // Add point lights for magical atmosphere
+            const colors = [0x667eea, 0xf093fb, 0x43e97b];
+            for (let i = 0; i < 3; i++) {
+                const light = new THREE.PointLight(colors[i], 0.3, 500);
+                light.position.set(
+                    (Math.random() - 0.5) * 800,
+                    (Math.random() - 0.5) * 400,
+                    (Math.random() - 0.5) * 800
+                );
+                scene.add(light);
+            }
+            
+            // Add subtle particle system for depth
+            createParticleSystem(scene);
+        }
+
+        // Create ambient particle system
+        function createParticleSystem(scene) {
+            const particleCount = 100;
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            
+            for (let i = 0; i < particleCount * 3; i += 3) {
+                positions[i] = (Math.random() - 0.5) * 1000;
+                positions[i + 1] = (Math.random() - 0.5) * 500;
+                positions[i + 2] = (Math.random() - 0.5) * 1000;
+            }
+            
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            
+            const material = new THREE.PointsMaterial({
+                color: 0x667eea,
+                size: 2,
+                transparent: true,
+                opacity: 0.3,
+                blending: THREE.AdditiveBlending,
+            });
+            
+            const particles = new THREE.Points(geometry, material);
+            scene.add(particles);
+            
+            // Animate particles
+            function animateParticles() {
+                particles.rotation.y += 0.001;
+                particles.rotation.x += 0.0005;
+                requestAnimationFrame(animateParticles);
+            }
+            animateParticles();
         }
 
         // Color mapping
@@ -536,10 +911,11 @@
                     level: 1
                 });
 
-                // Connect domain to central
+                // NARRATIVE FIX: Reverse link direction (domain → central)
+                // Particles flow from periphery toward center
                 links.push({
-                    source: 'central',
-                    target: domainId
+                    source: domainId,
+                    target: 'central'
                 });
 
                 // Add entity nodes (layer 2+)
@@ -553,10 +929,11 @@
                         level: 2
                     });
 
-                    // Connect entity to domain
+                    // NARRATIVE FIX: Reverse link direction (entity → domain)
+                    // Data flows inward: raw data becomes wisdom
                     links.push({
-                        source: domainId,
-                        target: entityId
+                        source: entityId,
+                        target: domainId
                     });
                 });
             });
@@ -592,6 +969,11 @@
                     const hierarchical = buildHierarchy(result.graph);
                     
                     Graph.graphData(hierarchical);
+
+                    // Apply orbital physics after data load
+                    setTimeout(() => {
+                        applyOrbitalPhysics();
+                    }, 100);
 
                     // Update stats
                     document.getElementById('nodeCount').textContent = hierarchical.nodes.length;
@@ -637,6 +1019,35 @@
                 btn.classList.remove('recording');
                 btn.textContent = '🎙️ Record';
                 showStatus('Processing...');
+            }
+        }
+
+        async function toggleVoiceAgent() {
+            const btn = document.getElementById('voiceAgentBtn');
+            
+            if (!voiceAgent) {
+                // Initialize voice agent
+                voiceAgent = new VoiceAgent(ELEVENLABS_API_KEY);
+            }
+
+            if (voiceAgent.isActive) {
+                // Stop voice agent
+                await voiceAgent.stop();
+                btn.classList.remove('active');
+                btn.innerHTML = '<span aria-hidden="true">🤖</span> Voice Agent';
+                showStatus('Voice agent stopped');
+            } else {
+                // Start voice agent
+                showStatus('Starting voice agent...');
+                const success = await voiceAgent.startConversation(ELEVENLABS_AGENT_ID);
+                
+                if (success) {
+                    btn.classList.add('active');
+                    btn.innerHTML = '<span aria-hidden="true">🟢</span> Voice Agent Active';
+                    showStatus('🎤 Voice agent ready! Try: "rotate camera left" or "search for goals"', 5000);
+                } else {
+                    showStatus('❌ Failed to start voice agent. Check console for details.', 5000);
+                }
             }
         }
 
@@ -712,9 +1123,219 @@
             }
         }
 
-        // Initialize
-        initGraph();
-        setTimeout(loadGraph, 500);
+        // Performance optimization and monitoring
+        const performanceMonitor = {
+            frameCount: 0,
+            lastTime: Date.now(),
+            fps: 0,
+            
+            update() {
+                this.frameCount++;
+                const now = Date.now();
+                if (now - this.lastTime >= 1000) {
+                    this.fps = Math.round((this.frameCount * 1000) / (now - this.lastTime));
+                    this.frameCount = 0;
+                    this.lastTime = now;
+                    
+                    // Update FPS display if exists
+                    const fpsElement = document.getElementById('fps-counter');
+                    if (fpsElement) {
+                        fpsElement.textContent = `${this.fps} FPS`;
+                        fpsElement.style.color = this.fps >= 50 ? '#43e97b' : this.fps >= 30 ? '#ffd89b' : '#f5576c';
+                    }
+                }
+            },
+            
+            optimizeForPerformance() {
+                const graphData = Graph.graphData();
+                const nodeCount = graphData.nodes.length;
+                
+                // Adaptive quality based on node count and performance
+                if (this.fps < 30 && nodeCount > 100) {
+                    // Reduce quality for better performance
+                    Graph.nodeThreeObjectExtend(true); // Use instanced rendering
+                    Graph.linkDirectionalParticles(0); // Disable particles
+                    console.log('Performance mode: Reduced quality for better FPS');
+                } else if (this.fps > 55 && nodeCount < 50) {
+                    // Enhance quality for better visuals
+                    Graph.linkDirectionalParticles(4);
+                    console.log('Quality mode: Enhanced visuals');
+                }
+            }
+        };
+
+        // Advanced keyboard and mouse controls
+        function setupAdvancedControls() {
+            let isShiftPressed = false;
+            let isCtrlPressed = false;
+            
+            document.addEventListener('keydown', (event) => {
+                isShiftPressed = event.shiftKey;
+                isCtrlPressed = event.ctrlKey;
+                
+                switch(event.code) {
+                    case 'KeyR':
+                        if (isCtrlPressed) {
+                            event.preventDefault();
+                            // Reset camera to default position
+                            Graph.cameraPosition({ x: 0, y: 200, z: 400 }, { x: 0, y: 0, z: 0 }, 1000);
+                            showStatus('Camera reset', 2000);
+                        }
+                        break;
+                    case 'KeyF':
+                        if (isCtrlPressed) {
+                            event.preventDefault();
+                            // Focus on random node
+                            const nodes = Graph.graphData().nodes;
+                            const randomNode = nodes[Math.floor(Math.random() * nodes.length)];
+                            if (randomNode) {
+                                const distance = 100;
+                                const distRatio = 1 + distance / Math.hypot(randomNode.x, randomNode.y, randomNode.z);
+                                Graph.cameraPosition(
+                                    { x: randomNode.x * distRatio, y: randomNode.y * distRatio, z: randomNode.z * distRatio },
+                                    randomNode,
+                                    1000
+                                );
+                                showStatus(`Focusing on ${randomNode.label}`, 2000);
+                            }
+                        }
+                        break;
+                    case 'KeyP':
+                        if (isCtrlPressed) {
+                            event.preventDefault();
+                            // Toggle physics simulation
+                            const isRunning = Graph.d3Force('center');
+                            if (isRunning) {
+                                Graph.pauseAnimation();
+                                showStatus('Physics paused', 2000);
+                            } else {
+                                Graph.resumeAnimation();
+                                showStatus('Physics resumed', 2000);
+                            }
+                        }
+                        break;
+                    case 'Space':
+                        event.preventDefault();
+                        // Toggle auto-rotate
+                        if (!window.autoRotate) {
+                            window.autoRotate = true;
+                            autoRotateCamera();
+                            showStatus('Auto-rotate enabled', 2000);
+                        } else {
+                            window.autoRotate = false;
+                            showStatus('Auto-rotate disabled', 2000);
+                        }
+                        break;
+                }
+            });
+            
+            document.addEventListener('keyup', (event) => {
+                isShiftPressed = event.shiftKey;
+                isCtrlPressed = event.ctrlKey;
+            });
+        }
+
+        // Auto-rotate camera around the central node
+        function autoRotateCamera() {
+            if (!window.autoRotate) return;
+            
+            const time = Date.now() * 0.001;
+            const radius = 400;
+            const x = Math.cos(time * 0.1) * radius;
+            const y = Math.sin(time * 0.05) * 100 + 200;
+            const z = Math.sin(time * 0.1) * radius;
+            
+            Graph.cameraPosition({ x, y, z }, { x: 0, y: 0, z: 0 });
+            
+            requestAnimationFrame(autoRotateCamera);
+        }
+
+        // Add FPS counter and controls info to UI
+        function addPerformanceUI() {
+            // Add FPS counter to info panel
+            const infoPanel = document.getElementById('info-panel');
+            const fpsHtml = `
+                <div class="stat">
+                    <span>Performance:</span>
+                    <span class="stat-value" id="fps-counter">-- FPS</span>
+                </div>
+            `;
+            infoPanel.innerHTML += fpsHtml;
+            
+            // Add controls info
+            const controlsInfo = `
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2); font-size: 0.8em;">
+                    <strong>Controls:</strong><br>
+                    <div style="margin-top: 8px; line-height: 1.4;">
+                        • <strong>Ctrl+R</strong>: Reset camera<br>
+                        • <strong>Ctrl+F</strong>: Focus random node<br>
+                        • <strong>Ctrl+P</strong>: Toggle physics<br>
+                        • <strong>Space</strong>: Auto-rotate<br>
+                        • <strong>Drag</strong>: Move nodes<br>
+                        • <strong>Scroll</strong>: Zoom
+                    </div>
+                </div>
+            `;
+            infoPanel.innerHTML += controlsInfo;
+        }
+
+        // Voice control integration placeholder
+        function setupVoiceControlIntegration() {
+            // This will be integrated with Agent 2's voice control system
+            window.hanseiVoiceCommands = {
+                'focus central node': () => {
+                    const centralNode = Graph.graphData().nodes.find(n => n.id === 'central');
+                    if (centralNode) {
+                        Graph.cameraPosition(
+                            { x: 0, y: 200, z: 400 },
+                            centralNode,
+                            1000
+                        );
+                        showStatus('Focused on central node', 2000);
+                    }
+                },
+                'show all memories': () => {
+                    Graph.zoomToFit(1000);
+                    showStatus('Showing all memories', 2000);
+                },
+                'start auto rotate': () => {
+                    window.autoRotate = true;
+                    autoRotateCamera();
+                    showStatus('Auto-rotate started', 2000);
+                },
+                'stop auto rotate': () => {
+                    window.autoRotate = false;
+                    showStatus('Auto-rotate stopped', 2000);
+                }
+            };
+        }
+
+        // Initialize the enhanced 3D memory experience
+        function initializeHanseiExperience() {
+            console.log('🚀 Initializing HANSEI Immersive Spatial UI...');
+            
+            // Core initialization
+            initGraph();
+            setupAdvancedControls();
+            addPerformanceUI();
+            setupVoiceControlIntegration();
+            
+            // Start performance monitoring
+            function monitorPerformance() {
+                performanceMonitor.update();
+                performanceMonitor.optimizeForPerformance();
+                requestAnimationFrame(monitorPerformance);
+            }
+            monitorPerformance();
+            
+            // Load initial graph data
+            setTimeout(loadGraph, 500);
+            
+            console.log('✨ HANSEI Experience initialized successfully!');
+        }
+
+        // Initialize everything
+        initializeHanseiExperience();
     </script>
 </body>
 </html>

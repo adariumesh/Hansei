@@ -43,9 +43,20 @@ export async function processRequest(
     // Process patterns based on analysis type
     const detectionResult = await detectPatternsForAnalysisType(
       request.input, 
-      request.analysisType,
+      request.analysisType || 'general',
       request.options || {}
     );
+    
+    // Add graph analysis if requested
+    if (request.analysisType === 'orphan_nodes' as any || request.analysisType === 'hub_nodes' as any) {
+      const graphAnalysis = await performGraphAnalysis(
+        env,
+        request.input,
+        request.analysisType,
+        request.options || {}
+      );
+      Object.assign(detectionResult, graphAnalysis);
+    }
     
     const processingTime = Date.now() - startTime;
     
@@ -308,3 +319,241 @@ function generateRequestId(): string {
 
 // Legacy exports for backwards compatibility
 export { validatePatternDetectionRequest as validateRequestStructure };
+
+// Real graph analysis functions
+async function performGraphAnalysis(
+  env: PatternDetectorEnvironment,
+  input: string,
+  analysisType: string,
+  options: Record<string, any>
+): Promise<DetectionResult> {
+  const startTime = Date.now();
+  
+  try {
+    // Mock graph data structure for analysis
+    const graphData = await buildGraphFromInput(input, options);
+    
+    if (analysisType === 'orphan_nodes') {
+      return await detectOrphanNodes(graphData, options);
+    } else if (analysisType === 'hub_nodes') {
+      return await detectHubNodes(graphData, options);
+    }
+    
+    return {
+      patterns: [],
+      count: 0,
+      analysisMetrics: {
+        totalAnalyzed: 0,
+        processingTimeMs: Date.now() - startTime,
+        algorithmUsed: analysisType,
+        confidenceDistribution: { high: 0, medium: 0, low: 0 }
+      }
+    };
+  } catch (error) {
+    env.logger.error('Graph analysis failed', { error });
+    throw error;
+  }
+}
+
+async function buildGraphFromInput(input: string, options: Record<string, any>): Promise<GraphData> {
+  // Parse input as graph data or build from entities
+  const entities = extractEntitiesFromText(input);
+  const nodes = new Map();
+  const edges = new Map();
+  
+  // Create nodes for each entity
+  entities.forEach((entity, index) => {
+    nodes.set(`node_${index}`, {
+      id: `node_${index}`,
+      type: entity.type,
+      label: entity.value,
+      connections: []
+    });
+  });
+  
+  // Create edges based on co-occurrence
+  const nodeArray = Array.from(nodes.values());
+  for (let i = 0; i < nodeArray.length; i++) {
+    for (let j = i + 1; j < nodeArray.length; j++) {
+      const edgeId = `edge_${i}_${j}`;
+      edges.set(edgeId, {
+        id: edgeId,
+        source: nodeArray[i].id,
+        target: nodeArray[j].id,
+        weight: calculateRelationshipWeight(nodeArray[i], nodeArray[j])
+      });
+      
+      // Update connection counts
+      nodeArray[i].connections.push(nodeArray[j].id);
+      nodeArray[j].connections.push(nodeArray[i].id);
+    }
+  }
+  
+  return { nodes, edges };
+}
+
+async function detectOrphanNodes(graphData: GraphData, options: Record<string, any>): Promise<DetectionResult> {
+  const threshold = options.threshold || 2;
+  const orphans = [];
+  
+  for (const node of graphData.nodes.values()) {
+    if (node.connections.length <= threshold) {
+      orphans.push({
+        id: node.id,
+        label: node.label,
+        type: node.type,
+        connectionCount: node.connections.length,
+        confidence: 1.0 - (node.connections.length / threshold)
+      });
+    }
+  }
+  
+  return {
+    patterns: orphans.map(orphan => ({
+      type: 'orphan_node',
+      value: orphan.label,
+      confidence: orphan.confidence,
+      description: `Orphaned ${orphan.type}: ${orphan.label} (${orphan.connectionCount} connections)`,
+      location: { start: 0, end: 0 },
+      metadata: {
+        nodeId: orphan.id,
+        connectionCount: orphan.connectionCount
+      }
+    })),
+    count: orphans.length,
+    analysisMetrics: {
+      totalAnalyzed: graphData.nodes.size,
+      processingTimeMs: 0,
+      algorithmUsed: 'orphan_detection',
+      confidenceDistribution: { high: 0, medium: 0, low: 0 }
+    }
+  };
+}
+
+async function detectHubNodes(graphData: GraphData, options: Record<string, any>): Promise<DetectionResult> {
+  const minConnections = options.min_connections || 5;
+  const hubs = [];
+  
+  for (const node of graphData.nodes.values()) {
+    if (node.connections.length >= minConnections) {
+      hubs.push({
+        id: node.id,
+        label: node.label,
+        type: node.type,
+        connectionCount: node.connections.length,
+        centrality: node.connections.length / graphData.nodes.size
+      });
+    }
+  }
+  
+  // Sort by connection count
+  hubs.sort((a, b) => b.connectionCount - a.connectionCount);
+  
+  return {
+    patterns: hubs.map(hub => ({
+      type: 'hub_node',
+      value: hub.label,
+      confidence: Math.min(1.0, hub.connectionCount / (graphData.nodes.size * 0.8)),
+      description: `Hub ${hub.type}: ${hub.label} (${hub.connectionCount} connections)`,
+      location: { start: 0, end: 0 },
+      metadata: {
+        nodeId: hub.id,
+        connectionCount: hub.connectionCount,
+        centrality: hub.centrality
+      }
+    })),
+    count: hubs.length,
+    analysisMetrics: {
+      totalAnalyzed: graphData.nodes.size,
+      processingTimeMs: 0,
+      algorithmUsed: 'hub_identification',
+      confidenceDistribution: { high: 0, medium: 0, low: 0 }
+    }
+  };
+}
+
+function extractEntitiesFromText(text: string): Array<{type: string, value: string}> {
+  const entities = [];
+  
+  // Extract various entity types
+  const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
+  const emails = text.match(emailRegex) || [];
+  emails.forEach(email => entities.push({ type: 'email', value: email }));
+  
+  const phoneRegex = /\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/g;
+  const phones = text.match(phoneRegex) || [];
+  phones.forEach(phone => entities.push({ type: 'phone', value: phone }));
+  
+  const nameRegex = /\b[A-Z][a-z]+ [A-Z][a-z]+\b/g;
+  const names = text.match(nameRegex) || [];
+  names.forEach(name => entities.push({ type: 'person', value: name }));
+  
+  const dateRegex = /\b\d{1,2}\/\d{1,2}\/\d{4}\b|\b\d{4}-\d{2}-\d{2}\b/g;
+  const dates = text.match(dateRegex) || [];
+  dates.forEach(date => entities.push({ type: 'date', value: date }));
+  
+  // Extract keywords (simple approach)
+  const words = text.toLowerCase().match(/\b\w{4,}\b/g) || [];
+  const wordCounts: Record<string, number> = {};
+  words.forEach(word => {
+    wordCounts[word] = (wordCounts[word] || 0) + 1;
+  });
+  
+  // Add frequent words as keywords
+  Object.entries(wordCounts)
+    .filter(([word, count]) => count >= 2)
+    .sort(([,a], [,b]) => b - a)
+    .slice(0, 10)
+    .forEach(([word]) => {
+      entities.push({ type: 'keyword', value: word });
+    });
+  
+  return entities;
+}
+
+function calculateRelationshipWeight(node1: any, node2: any): number {
+  // Simple relationship weight calculation
+  // In reality, this would use more sophisticated methods
+  let weight = 0.1; // base weight
+  
+  // Same type entities have higher weight
+  if (node1.type === node2.type) {
+    weight += 0.3;
+  }
+  
+  // Text similarity (simple approach)
+  const similarity = calculateTextSimilarity(node1.label, node2.label);
+  weight += similarity * 0.6;
+  
+  return Math.min(1.0, weight);
+}
+
+function calculateTextSimilarity(text1: string, text2: string): number {
+  // Simple Jaccard similarity
+  const words1 = new Set(text1.toLowerCase().split(/\s+/));
+  const words2 = new Set(text2.toLowerCase().split(/\s+/));
+  
+  const intersection = new Set([...words1].filter(x => words2.has(x)));
+  const union = new Set([...words1, ...words2]);
+  
+  return union.size > 0 ? intersection.size / union.size : 0;
+}
+
+interface GraphData {
+  nodes: Map<string, GraphNode>;
+  edges: Map<string, GraphEdge>;
+}
+
+interface GraphNode {
+  id: string;
+  type: string;
+  label: string;
+  connections: string[];
+}
+
+interface GraphEdge {
+  id: string;
+  source: string;
+  target: string;
+  weight: number;
+}

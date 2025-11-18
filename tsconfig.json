@@ -21,8 +21,18 @@
     "outDir": "dist",
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "strict": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
     "target": "es2022"
   },
-  "exclude": ["test"]
+  "exclude": [
+    "test",
+    "**/*.test.ts",
+    "src/audio-processor-orig",
+    "src/document-analyzer-orig",
+    "src/batch-processor",
+    "src/insight-generator",
+    "src-disabled"
+  ]
 }

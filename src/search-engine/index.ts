@@ -78,8 +78,8 @@ app.post('/api/search/hybrid', async (c) => {
     const results = await hybridSearch(query);
     
     return c.json({
-      success: true,
-      ...results
+      ...results,
+      success: true
     });
   } catch (error) {
     return c.json({

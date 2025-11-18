@@ -1,30 +1,37 @@
 #!/bin/bash
-# HANSEI Quick Deploy Script
-# Run this on your Vultr server (155.138.196.189)
+# HANSEI Unified Deployment Script
+# Optimized deployment for Vultr server (155.138.196.189)
 
-set -e
+set -e  # Exit on error
+
+# Color codes for output
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
 
 echo "========================================"
 echo "  HANSEI Deployment Starting..."
 echo "========================================"
 
-# Update system
-echo "[1/7] Updating system packages..."
+# Configuration
+FRONTEND_DIR="/var/www/hansei"
+NGINX_CONF="/etc/nginx/sites-available/hansei"
+SERVER_IP="155.138.196.189"
+
+echo -e "${BLUE}[1/7] Updating system packages...${NC}"
 apt-get update -y
 apt-get upgrade -y
 
-# Install Nginx
-echo "[2/7] Installing Nginx..."
+echo -e "${BLUE}[2/7] Installing Nginx...${NC}"
 apt-get install -y nginx
 
-# Create directory
-echo "[3/7] Creating frontend directory..."
-mkdir -p /var/www/hansei
-chown -R www-data:www-data /var/www/hansei
+echo -e "${BLUE}[3/7] Creating frontend directory...${NC}"
+mkdir -p $FRONTEND_DIR
+chown -R www-data:www-data $FRONTEND_DIR
 
-# Configure Nginx
-echo "[4/7] Configuring Nginx..."
-cat > /etc/nginx/sites-available/hansei << 'NGINX_EOF'
+echo -e "${BLUE}[4/7] Configuring Nginx...${NC}"
+cat > $NGINX_CONF << 'EOF'
 server {
     listen 80;
     listen [::]:80;
@@ -59,33 +66,30 @@ server {
     access_log /var/log/nginx/hansei-access.log;
     error_log /var/log/nginx/hansei-error.log;
 }
-NGINX_EOF
+EOF
 
-# Enable site
-echo "[5/7] Enabling Nginx site..."
-ln -sf /etc/nginx/sites-available/hansei /etc/nginx/sites-enabled/
+echo -e "${BLUE}[5/7] Enabling Nginx site...${NC}"
+ln -sf $NGINX_CONF /etc/nginx/sites-enabled/hansei
 rm -f /etc/nginx/sites-enabled/default
 
-# Test and restart Nginx
-echo "[6/7] Testing Nginx configuration..."
+echo -e "${BLUE}[6/7] Testing and starting Nginx...${NC}"
 nginx -t
 systemctl enable nginx
 systemctl restart nginx
 
-# Configure firewall
-echo "[7/7] Configuring firewall..."
+echo -e "${BLUE}[7/7] Configuring firewall...${NC}"
 ufw --force enable
 ufw allow 'Nginx Full'
 ufw allow OpenSSH
 
 echo ""
-echo "========================================"
-echo "  ✅ Server Setup Complete!"
-echo "========================================"
+echo -e "${GREEN}========================================${NC}"
+echo -e "${GREEN}  ✅ Server Setup Complete!${NC}"
+echo -e "${GREEN}========================================${NC}"
 echo ""
-echo "Server is ready at: http://155.138.196.189"
-echo "Frontend directory: /var/www/hansei"
+echo -e "Server ready at: ${BLUE}http://$SERVER_IP${NC}"
+echo -e "Frontend directory: ${BLUE}$FRONTEND_DIR${NC}"
 echo ""
-echo "Next: Upload frontend files with:"
-echo "scp -r frontend/* root@155.138.196.189:/var/www/hansei/"
+echo "Upload frontend files with:"
+echo -e "${BLUE}scp -r frontend/* root@$SERVER_IP:$FRONTEND_DIR/${NC}"
 echo ""

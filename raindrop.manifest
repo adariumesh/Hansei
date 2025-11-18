@@ -1,26 +1,32 @@
 application "hansei" {
   
-  # Core memory and graph engine
-  service "memory-core" {
-    visibility = "private"
+  # Core public services
+  service "hansei-intelligence-processor" {
+    visibility = "public"
   }
   
-  # AI processing pipeline
-  service "intelligence-pipeline" {
-    visibility = "private"
-  }
-  
-  # Document and search engine
-  service "search-engine" {
-    visibility = "private"  
-  }
-  
-  # Public API gateway
   service "api-gateway" {
     visibility = "public"
   }
   
-  # Specialized processing services
+  # MCP integration for Claude Code
+  mcp_service "hansei-intel-mcp" {
+    visibility = "protected"
+  }
+  
+  # Private processing services
+  service "memory-core" {
+    visibility = "private"
+  }
+  
+  service "intelligence-pipeline" {
+    visibility = "private"
+  }
+  
+  service "search-engine" {
+    visibility = "private"  
+  }
+  
   service "entity-resolver" {
     visibility = "private"
   }
@@ -37,44 +43,105 @@ application "hansei" {
     visibility = "private"
   }
   
-  # From srini branch - additional components
-  service "hansei-intelligence-processor" {
-    visibility = "public"
+  # NEW: Vultr Serverless Inference Sleep Cycle
+  service "vultr-inference-processor" {
+    visibility = "private"
+    platform = "vultr_serverless"
+    compute {
+      model = "mixtral-8x7b"
+      memory = "8GB"
+      timeout = "900s"
+    }
   }
   
-  mcp_service "hansei-intel-mcp" {
-    visibility = "protected"
-  }
-  
-  # Memory and storage systems
+  # Enhanced SmartMemory 4-tier hierarchy
   smartmemory "agent-memory" {
+    tier = "working"
+    retention_policy = "session_based"
+    max_size = "100MB"
   }
   
+  smartmemory "episodic-memory" {
+    tier = "episodic"
+    retention_policy = "temporal_decay"
+    max_size = "1GB"
+    compression = "enabled"
+  }
+  
+  smartmemory "semantic-memory" {
+    tier = "semantic"
+    retention_policy = "knowledge_based"
+    max_size = "10GB"
+    indexing = "full_text"
+  }
+  
+  smartmemory "procedural-memory" {
+    tier = "procedural"
+    retention_policy = "user_preference"
+    max_size = "500MB"
+    adaptation = "enabled"
+  }
+  
+  # Vultr PostgreSQL database connection
   smartsql "graph-database" {
+    provider = "vultr_postgresql"
+    connection_pool = "enabled"
+    max_connections = 20
+    ssl_mode = "require"
+    schema_version = "2.0"
   }
   
   smartbucket "document-storage" {
+    provider = "vultr_object_storage"
+    encryption = "enabled"
+    versioning = "enabled"
   }
   
   smartbucket "audio-storage" {
+    provider = "vultr_object_storage"
+    encryption = "enabled"
+    lifecycle_policy = "auto_archive"
   }
   
-  # Vector storage for embeddings
+  # Enhanced vector storage for embeddings
   vector_index "memory-embeddings" {
     dimensions = 1536
     metric = "cosine"
+    provider = "vultr_vector_db"
+    sharding = "enabled"
   }
   
   vector_index "document-embeddings" {
     dimensions = 1536
     metric = "cosine"
+    provider = "vultr_vector_db"
+    batch_indexing = "enabled"
   }
   
-  # Processing queues
+  vector_index "entity-embeddings" {
+    dimensions = 768
+    metric = "cosine"
+    provider = "vultr_vector_db"
+    real_time_updates = "enabled"
+  }
+  
+  # Enhanced processing queues with Vultr integration
   queue "processing-queue" {
+    provider = "vultr_message_queue"
+    max_batch_size = 100
+    visibility_timeout = "30s"
   }
   
   queue "analysis-queue" {
+    provider = "vultr_message_queue"
+    max_batch_size = 50
+    dead_letter_queue = "enabled"
+  }
+  
+  queue "inference-queue" {
+    provider = "vultr_message_queue"
+    priority_levels = 3
+    batch_processing = "enabled"
   }
   
   # Background processing observers
@@ -82,30 +149,78 @@ application "hansei" {
     source {
       bucket = "audio-storage"
     }
+    trigger = "upload_complete"
   }
   
   observer "document-analyzer" {
     source {
       bucket = "document-storage"
     }
+    trigger = "upload_complete"
   }
   
   observer "batch-processor" {
     source {
       queue = "processing-queue"
     }
+    batch_size = 10
   }
   
   observer "insight-generator" {
     source {
       queue = "analysis-queue"
     }
+    ai_model = "mixtral-8x7b"
   }
   
-  # Key-value cache for performance
+  # NEW: Sleep Cycle inference observer
+  observer "sleep-cycle-processor" {
+    source {
+      queue = "inference-queue"
+    }
+    schedule = "*/15 * * * *" # Every 15 minutes
+    batch_size = 50
+    ai_model = "mixtral-8x7b"
+    wake_threshold = 10 # Wake up when 10+ items in queue
+  }
+  
+  # Enhanced caching with Vultr Redis
   kv_cache "session-cache" {
+    provider = "vultr_redis"
+    ttl = "1h"
+    max_memory = "256MB"
   }
   
   kv_cache "query-cache" {
+    provider = "vultr_redis"
+    ttl = "30m"
+    max_memory = "128MB"
+  }
+  
+  kv_cache "inference-cache" {
+    provider = "vultr_redis"
+    ttl = "24h"
+    max_memory = "512MB"
+    compression = "enabled"
+  }
+  
+  # Health monitoring and metrics
+  monitor "system-health" {
+    endpoints = [
+      "/health",
+      "/metrics",
+      "/memory-status"
+    ]
+    interval = "30s"
+    alerts = "enabled"
+  }
+  
+  # Production deployment configuration
+  deployment {
+    region = "vultr_us_east"
+    environment = "production"
+    auto_scaling = "enabled"
+    load_balancer = "enabled"
+    ssl_termination = "edge"
   }
 }

@@ -4,7 +4,7 @@
 import { ComponentRequest, ComponentResponse, Environment, SearchResult, SearchOptions } from '../shared/types.js';
 
 // Re-export shared types for backward compatibility
-export { ComponentRequest, ComponentResponse, Environment };
+export type { ComponentRequest, ComponentResponse, Environment };
 
 /**
  * Search query interface with enhanced typing

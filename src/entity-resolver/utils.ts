@@ -29,7 +29,7 @@ export async function processRequest(
     // Enhanced validation
     const validationResult = await validateRequest(request);
     if (!validationResult) {
-      return createErrorResponse(generateId(), 'Invalid request structure', startTime);
+      return createErrorResponse(generateId(), 'Invalid input', startTime);
     }
 
     // Extract entities from the input text
@@ -417,7 +417,6 @@ function calculateEnhancedConfidenceScore(entity: Entity): number {
 
 export function normalizeText(text: string): string {
   return text
-    .toLowerCase()
     .trim()
     .replace(/\s+/g, ' ')
     .replace(/[^\w\s]/g, '');
