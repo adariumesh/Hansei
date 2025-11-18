@@ -1,4 +1,5 @@
 import { ComponentRequest, ComponentResponse, Environment } from './interfaces.js';
+import { Hono, Context, MiddlewareHandler } from 'hono';
 
 export async function processRequest(
   env: Environment,
@@ -140,4 +141,239 @@ export async function optimizeProcessing(
   });
 
   return optimizedRequest;
+}
+
+// Performance cache for responses
+const responseCacheStore = new Map<string, { data: any; timestamp: number; ttl: number }>();
+
+// Rate limiting store (simple in-memory)
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+
+// Middleware functions
+export const requestLogger: MiddlewareHandler = async (c, next) => {
+  const start = Date.now();
+  console.log(`${c.req.method} ${c.req.url}`);
+  await next();
+  const duration = Date.now() - start;
+  console.log(`${c.req.method} ${c.req.url} - ${c.res.status} (${duration}ms)`);
+};
+
+// Response caching middleware for GET requests
+export const responseCacheMiddleware: MiddlewareHandler = async (c, next) => {
+  // Only cache GET requests
+  if (c.req.method !== 'GET') {
+    await next();
+    return;
+  }
+  
+  const cacheKey = c.req.url;
+  const cached = responseCacheStore.get(cacheKey);
+  
+  // Check if we have a valid cached response
+  if (cached && Date.now() < cached.timestamp + cached.ttl) {
+    c.header('X-Cache', 'HIT');
+    return c.json(cached.data);
+  }
+  
+  await next();
+  
+  // Cache successful responses for 5 minutes
+  if (c.res.status === 200) {
+    const data = await c.res.clone().json();
+    responseCacheStore.set(cacheKey, {
+      data,
+      timestamp: Date.now(),
+      ttl: 300000 // 5 minutes
+    });
+    c.header('X-Cache', 'MISS');
+  }
+};
+
+// Rate limiting middleware
+export const rateLimiter: MiddlewareHandler = async (c, next) => {
+  const clientIP = c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown';
+  const now = Date.now();
+  const windowMs = 60000; // 1 minute window
+  const maxRequests = 100; // 100 requests per minute
+  
+  const key = `rate_limit:${clientIP}`;
+  const current = rateLimitStore.get(key);
+  
+  // Reset window if expired
+  if (!current || now > current.resetTime) {
+    rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
+    await next();
+    return;
+  }
+  
+  // Check if rate limit exceeded
+  if (current.count >= maxRequests) {
+    return createStandardResponse(c, 429, { 
+      error: 'Rate limit exceeded',
+      retryAfter: Math.ceil((current.resetTime - now) / 1000)
+    });
+  }
+  
+  // Increment counter
+  current.count++;
+  rateLimitStore.set(key, current);
+  
+  // Add rate limit headers
+  c.header('X-RateLimit-Limit', maxRequests.toString());
+  c.header('X-RateLimit-Remaining', (maxRequests - current.count).toString());
+  c.header('X-RateLimit-Reset', new Date(current.resetTime).toISOString());
+  
+  await next();
+};
+
+export const errorHandler: MiddlewareHandler = async (c, next) => {
+  try {
+    await next();
+  } catch (err) {
+    console.error('Error:', err);
+    return createStandardResponse(c, 500, { error: 'Internal server error' });
+  }
+};
+
+export const authenticateRequest: MiddlewareHandler = async (c, next) => {
+  // Simple authentication check - can be enhanced later
+  const authHeader = c.req.header('Authorization');
+  if (!authHeader && c.req.path !== '/health') {
+    return createStandardResponse(c, 401, { error: 'Unauthorized' });
+  }
+  await next();
+};
+
+export function createStandardResponse(c: Context, status: number, data: any) {
+  return c.json({
+    status,
+    data,
+    timestamp: new Date().toISOString()
+  });
+}
+
+// Route creation functions
+export function createHealthRoutes(app: Hono<any>) {
+  app.get('/health', (c) => {
+    return createStandardResponse(c, 200, { 
+      status: 'healthy', 
+      service: 'hansei-api-gateway',
+      timestamp: new Date().toISOString()
+    });
+  });
+  
+  app.get('/status', (c) => {
+    return createStandardResponse(c, 200, { 
+      status: 'operational',
+      services: {
+        'memory-core': 'active',
+        'intelligence-pipeline': 'active',
+        'search-engine': 'active'
+      }
+    });
+  });
+}
+
+export function createMemoryRoutes(app: Hono<any>) {
+  app.get('/api/memory/search', (c) => {
+    const query = c.req.query('q');
+    // TODO: Integrate with memory-core service
+    return createStandardResponse(c, 200, { 
+      query,
+      results: [],
+      message: 'Memory search endpoint - integration pending'
+    });
+  });
+  
+  app.post('/api/memory/store', async (c) => {
+    const body = await c.req.json();
+    // TODO: Integrate with memory-core service
+    return createStandardResponse(c, 201, { 
+      id: `mem_${Date.now()}`,
+      stored: true,
+      message: 'Memory store endpoint - integration pending'
+    });
+  });
+}
+
+export function createIntelligenceRoutes(app: Hono<any>) {
+  app.post('/api/chat', async (c) => {
+    try {
+      const body = await c.req.json();
+      const { message, conversation_id } = body;
+      
+      // TODO: Integrate with hansei-intelligence-processor service
+      const response = {
+        id: `chat_${Date.now()}`,
+        message: `Echo: ${message}`,
+        conversation_id: conversation_id || `conv_${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        type: 'assistant'
+      };
+      
+      return createStandardResponse(c, 200, response);
+    } catch (error) {
+      return createStandardResponse(c, 400, { error: 'Invalid request body' });
+    }
+  });
+  
+  app.post('/api/infer', async (c) => {
+    try {
+      const body = await c.req.json();
+      // TODO: Integrate with intelligence-pipeline service
+      return createStandardResponse(c, 200, { 
+        inference: 'Intelligence inference endpoint - integration pending',
+        input: body
+      });
+    } catch (error) {
+      return createStandardResponse(c, 400, { error: 'Invalid request body' });
+    }
+  });
+}
+
+export function createSearchRoutes(app: Hono<any>) {
+  app.get('/api/search', (c) => {
+    const query = c.req.query('q');
+    const type = c.req.query('type') || 'semantic';
+    
+    // TODO: Integrate with search-engine service
+    return createStandardResponse(c, 200, { 
+      query,
+      type,
+      results: [],
+      message: 'Search endpoint - integration pending'
+    });
+  });
+}
+
+export function createProcessingRoutes(app: Hono<any>) {
+  app.get('/api/patterns/orphans', (c) => {
+    // TODO: Integrate with pattern-detector service
+    return createStandardResponse(c, 200, { 
+      orphans: [],
+      message: 'Orphan patterns endpoint - integration pending'
+    });
+  });
+  
+  app.get('/api/patterns/hubs', (c) => {
+    // TODO: Integrate with pattern-detector service
+    return createStandardResponse(c, 200, { 
+      hubs: [],
+      message: 'Hub patterns endpoint - integration pending'
+    });
+  });
+  
+  app.post('/api/process/document', async (c) => {
+    try {
+      const body = await c.req.json();
+      // TODO: Integrate with document-processor service
+      return createStandardResponse(c, 202, { 
+        id: `doc_${Date.now()}`,
+        status: 'processing',
+        message: 'Document processing endpoint - integration pending'
+      });
+    } catch (error) {
+      return createStandardResponse(c, 400, { error: 'Invalid request body' });
+    }
+  });
 }

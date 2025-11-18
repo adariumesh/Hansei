@@ -13,7 +13,9 @@ import {
   errorHandler,
   requestLogger,
   authenticateRequest,
-  createStandardResponse
+  createStandardResponse,
+  responseCacheMiddleware,
+  rateLimiter
 } from './utils.js';
 
 // Create Hono app with middleware
@@ -21,6 +23,8 @@ const app = new Hono<{ Bindings: Env }>();
 
 // Add global middleware
 app.use('*', logger());
+app.use('*', rateLimiter);
+app.use('*', responseCacheMiddleware);
 app.use('*', requestLogger);
 app.use('*', errorHandler);
 
