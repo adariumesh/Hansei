@@ -37,6 +37,14 @@ application "hansei" {
     visibility = "private"
   }
   
+  # From srini branch - additional components
+  service "hansei-intelligence-processor" {
+    visibility = "public"
+  }
+  
+  mcp_service "hansei-intel-mcp" {
+    visibility = "protected"
+  }
   
   # Memory and storage systems
   smartmemory "agent-memory" {

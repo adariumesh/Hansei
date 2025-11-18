@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HANSEI - 3D Memory Graph</title>
+    <script src="https://unpkg.com/3d-force-graph"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e27;
+            color: white;
+            overflow: hidden;
+        }
+
+        #header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 14, 39, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            z-index: 1000;
+            border-bottom: 2px solid #667eea;
+        }
+
+        h1 {
+            font-size: 2em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+            min-width: 300px;
+        }
+
+        input, button, textarea {
+            padding: 12px 20px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            background: rgba(102, 126, 234, 0.1);
+            color: white;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            background: rgba(102, 126, 234, 0.2);
+            border-color: #764ba2;
+        }
+
+        button {
+            cursor: pointer;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            font-weight: bold;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .record-btn {
+            padding: 12px 24px;
+            border-radius: 50px;
+        }
+
+        .record-btn.recording {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        #graph-container {
+            position: fixed;
+            top: 140px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        #info-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(10, 14, 39, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #667eea;
+            max-width: 350px;
+            z-index: 999;
+        }
+
+        .stat {
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .legend {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        .status {
+            position: fixed;
+            top: 150px;
+            right: 20px;
+            padding: 15px 25px;
+            background: rgba(102, 126, 234, 0.2);
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            z-index: 999;
+            display: none;
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        .text-input-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(10, 14, 39, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #667eea;
+            max-width: 400px;
+            z-index: 999;
+        }
+
+        .text-input-container textarea {
+            width: 100%;
+            min-height: 80px;
+            resize: vertical;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1>⏺ HANSEI - 3D Memory Graph</h1>
+        <div class="controls">
+            <div class="input-group">
+                <input type="text" id="searchInput" placeholder="Search memories..." value="health goals">
+                <button onclick="loadGraph()">🔍 Search</button>
+            </div>
+            <div class="input-group">
+                <input type="text" id="textInput" placeholder="What's on your mind...">
+                <button onclick="submitText()">💾 Save</button>
+            </div>
+            <button class="record-btn" id="recordBtn" onclick="toggleRecording()">🎙️ Record</button>
+        </div>
+    </div>
+
+    <div id="graph-container"></div>
+
+    <div id="info-panel">
+        <h3>Graph Stats</h3>
+        <div class="stat">
+            <span>Nodes:</span>
+            <span class="stat-value" id="nodeCount">0</span>
+        </div>
+        <div class="stat">
+            <span>Connections:</span>
+            <span class="stat-value" id="edgeCount">0</span>
+        </div>
+        <div class="stat">
+            <span>Memories:</span>
+            <span class="stat-value" id="memoryCount">0</span>
+        </div>
+        <div class="legend">
+            <strong>Node Types:</strong>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #667eea;"></div>
+                <span>Goals</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #f093fb;"></div>
+                <span>Habits</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #43e97b;"></div>
+                <span>Projects</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ffd89b;"></div>
+                <span>Objects</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <script>
+        const API_BASE = 'https://svc-01ka9za29rb1k3xhtqxxe8qn20.01ka4j4ktmq3vmg0nfmg652rkw.lmapp.run';
+        const USER_ID = 'demo_user_' + Date.now();
+
+        let Graph;
+        let mediaRecorder = null;
+        let audioChunks = [];
+
+        // Initialize 3D Graph
+        function initGraph() {
+            const container = document.getElementById('graph-container');
+            
+            Graph = ForceGraph3D()(container)
+                .backgroundColor('#0a0e27')
+                .nodeLabel('label')
+                .nodeAutoColorBy('type')
+                .nodeVal(node => node.weight * 10)
+                .nodeColor(node => getNodeColor(node.type))
+                .linkColor(() => 'rgba(255,255,255,0.2)')
+                .linkWidth(2)
+                .linkDirectionalParticles(2)
+                .linkDirectionalParticleWidth(2)
+                .linkDirectionalParticleSpeed(0.005)
+                .onNodeClick(node => {
+                    showStatus(`${node.type}: ${node.label}`);
+                })
+                .onNodeHover(node => {
+                    container.style.cursor = node ? 'pointer' : null;
+                });
+
+            // Camera settings for better view
+            Graph.cameraPosition({ z: 300 });
+        }
+
+        // Color mapping
+        function getNodeColor(type) {
+            const colors = {
+                'goal': '#667eea',
+                'habit': '#f093fb',
+                'person': '#4facfe',
+                'project': '#43e97b',
+                'emotion': '#fa709a',
+                'object': '#ffd89b'
+            };
+            return colors[type] || '#999';
+        }
+
+        // Build hierarchical structure
+        function buildHierarchy(flatData) {
+            const nodes = [];
+            const links = [];
+
+            // Add central "You" node
+            nodes.push({
+                id: 'central',
+                label: 'You',
+                type: 'person',
+                weight: 1,
+                level: 0
+            });
+
+            // Group entities by type (domains)
+            const domains = {};
+            flatData.nodes.forEach(node => {
+                if (!domains[node.type]) {
+                    domains[node.type] = [];
+                }
+                domains[node.type].push(node);
+            });
+
+            // Create domain nodes (layer 1)
+            Object.keys(domains).forEach(domainType => {
+                const domainId = `domain-${domainType}`;
+                nodes.push({
+                    id: domainId,
+                    label: domainType.toUpperCase(),
+                    type: domainType,
+                    weight: 0.8,
+                    level: 1
+                });
+
+                // Connect domain to central
+                links.push({
+                    source: 'central',
+                    target: domainId
+                });
+
+                // Add entity nodes (layer 2+)
+                domains[domainType].forEach((entity, idx) => {
+                    const entityId = `${domainType}-${idx}`;
+                    nodes.push({
+                        id: entityId,
+                        label: entity.label,
+                        type: entity.type,
+                        weight: entity.weight,
+                        level: 2
+                    });
+
+                    // Connect entity to domain
+                    links.push({
+                        source: domainId,
+                        target: entityId
+                    });
+                });
+            });
+
+            // Add relationship edges (cross-links)
+            flatData.edges.forEach((edge, idx) => {
+                // Find matching nodes
+                const sourceNode = nodes.find(n => n.label === edge.source);
+                const targetNode = nodes.find(n => n.label === edge.target);
+
+                if (sourceNode && targetNode) {
+                    links.push({
+                        source: sourceNode.id,
+                        target: targetNode.id,
+                        type: edge.type
+                    });
+                }
+            });
+
+            return { nodes, links };
+        }
+
+        // Load and visualize graph
+        async function loadGraph() {
+            const query = document.getElementById('searchInput').value || 'all';
+            showStatus('Loading graph...');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/graph?query=${encodeURIComponent(query)}&limit=50&user_id=${USER_ID}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const hierarchical = buildHierarchy(result.graph);
+                    
+                    Graph.graphData(hierarchical);
+
+                    // Update stats
+                    document.getElementById('nodeCount').textContent = hierarchical.nodes.length;
+                    document.getElementById('edgeCount').textContent = hierarchical.links.length;
+                    document.getElementById('memoryCount').textContent = result.rawResults.length;
+
+                    showStatus('Graph loaded!', 2000);
+                } else {
+                    showStatus('Error loading graph', 3000);
+                }
+            } catch (err) {
+                showStatus('Network error', 3000);
+                console.error(err);
+            }
+        }
+
+        // Voice recording
+        async function toggleRecording() {
+            const btn = document.getElementById('recordBtn');
+
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        await uploadVoice(audioBlob);
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+
+                    mediaRecorder.start();
+                    btn.classList.add('recording');
+                    btn.textContent = '⏹️ Stop';
+                    showStatus('Recording...');
+                } catch (err) {
+                    showStatus('Microphone error', 3000);
+                }
+            } else {
+                mediaRecorder.stop();
+                btn.classList.remove('recording');
+                btn.textContent = '🎙️ Record';
+                showStatus('Processing...');
+            }
+        }
+
+        async function uploadVoice(audioBlob) {
+            try {
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'recording.wav');
+                formData.append('audio_format', 'wav');
+                formData.append('user_id', USER_ID);
+
+                const response = await fetch(`${API_BASE}/api/voice/ingest`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatus('✅ Voice saved!', 2000);
+                    setTimeout(loadGraph, 1000);
+                } else {
+                    showStatus('❌ Upload failed', 3000);
+                }
+            } catch (err) {
+                showStatus('❌ Network error', 3000);
+            }
+        }
+
+        async function submitText() {
+            const text = document.getElementById('textInput').value.trim();
+            if (!text) {
+                alert('Please enter some text');
+                return;
+            }
+
+            showStatus('Saving text...');
+
+            try {
+                const response = await fetch(`${API_BASE}/infer`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({
+                        content: text,
+                        user_id: USER_ID
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('textInput').value = '';
+                    showStatus('✅ Saved to memory!', 2000);
+                    setTimeout(loadGraph, 1000);
+                } else {
+                    showStatus('❌ Error: ' + (result.error || 'Unknown'), 3000);
+                    console.error('API error:', result);
+                }
+            } catch (err) {
+                showStatus('❌ Network error', 3000);
+                console.error('Submit error:', err);
+            }
+        }
+
+        function showStatus(message, duration = 0) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.classList.add('show');
+
+            if (duration > 0) {
+                setTimeout(() => {
+                    status.classList.remove('show');
+                }, duration);
+            }
+        }
+
+        // Initialize
+        initGraph();
+        setTimeout(loadGraph, 500);
+    </script>
+</body>
+</html>
