@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(raindrop auth:*)",
+      "Bash(npm install:*)",
+      "Bash(raindrop build:*)",
+      "Bash(curl:*)",
+      "Bash(ping:*)",
+      "Bash(ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 root@155.138.196.189 \"echo ''SSH connection successful''; uname -a\")",
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash push:*)",
+      "Bash(git stash:*)",
+      "Bash(scp:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
