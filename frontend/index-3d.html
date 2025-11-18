@@ -184,21 +184,235 @@
             resize: vertical;
             margin-bottom: 10px;
         }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            #header {
+                padding: 15px 10px;
+            }
+            
+            h1 {
+                font-size: 1.5em;
+                margin-bottom: 15px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .input-group {
+                min-width: auto;
+                flex-direction: column;
+            }
+            
+            input, button, textarea {
+                padding: 10px 15px;
+                font-size: 0.9em;
+            }
+            
+            #info-panel {
+                left: 10px;
+                right: 10px;
+                bottom: 10px;
+                max-width: none;
+                padding: 15px;
+            }
+            
+            .text-input-container {
+                left: 10px;
+                right: 10px;
+                bottom: 10px;
+                max-width: none;
+                padding: 15px;
+            }
+            
+            .status {
+                top: auto;
+                bottom: 120px;
+                right: 10px;
+                left: 10px;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.3em;
+            }
+            
+            input, button, textarea {
+                padding: 8px 12px;
+                font-size: 0.85em;
+            }
+            
+            #info-panel, .text-input-container {
+                padding: 12px;
+            }
+        }
+
+        /* Loading and Toast Notifications */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #333;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        .loading-overlay p {
+            color: white;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .error-toast, .success-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            max-width: 400px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            z-index: 9000;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .error-toast {
+            background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+        }
+
+        .success-toast {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        }
+
+        .error-toast button, .success-toast button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2em;
+            cursor: pointer;
+            margin-left: 10px;
+            padding: 0 5px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Accessibility Improvements */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Focus indicators */
+        button:focus, input:focus, textarea:focus {
+            outline: 3px solid #667eea;
+            outline-offset: 2px;
+        }
+
+        /* Reduced motion for accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
     </style>
 </head>
 <body>
-    <div id="header">
-        <h1>⏺ HANSEI - 3D Memory Graph</h1>
-        <div class="controls">
-            <div class="input-group">
-                <input type="text" id="searchInput" placeholder="Search memories..." value="health goals">
-                <button onclick="loadGraph()">🔍 Search</button>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>Loading 3D visualization...</p>
+    </div>
+
+    <!-- Error Toast -->
+    <div id="errorToast" class="error-toast" style="display: none;">
+        <span id="errorMessage"></span>
+        <button id="closeError" aria-label="Close error message">✕</button>
+    </div>
+
+    <!-- Success Toast -->
+    <div id="successToast" class="success-toast" style="display: none;">
+        <span id="successMessage"></span>
+        <button id="closeSuccess" aria-label="Close success message">✕</button>
+    </div>
+
+    <div id="header" role="banner">
+        <h1 id="mainTitle">⏺ HANSEI - 3D Memory Graph</h1>
+        <div class="controls" role="region" aria-label="Search and input controls">
+            <div class="input-group" role="search">
+                <label for="searchInput" class="sr-only">Search memories</label>
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="Search memories..." 
+                    value="health goals"
+                    aria-label="Search memories"
+                >
+                <button onclick="loadGraph()" aria-describedby="graph-container">
+                    <span aria-hidden="true">🔍</span> Search
+                </button>
             </div>
-            <div class="input-group">
-                <input type="text" id="textInput" placeholder="What's on your mind...">
-                <button onclick="submitText()">💾 Save</button>
+            <div class="input-group" aria-label="Add new memory">
+                <label for="textInput" class="sr-only">What's on your mind</label>
+                <input 
+                    type="text" 
+                    id="textInput" 
+                    placeholder="What's on your mind..."
+                    aria-label="What's on your mind"
+                >
+                <button onclick="submitText()">
+                    <span aria-hidden="true">💾</span> Save
+                </button>
             </div>
-            <button class="record-btn" id="recordBtn" onclick="toggleRecording()">🎙️ Record</button>
+            <button class="record-btn" id="recordBtn" onclick="toggleRecording()" aria-label="Start voice recording">
+                <span aria-hidden="true">🎙️</span> Record
+            </button>
         </div>
     </div>
 
@@ -242,7 +456,7 @@
     <div class="status" id="status"></div>
 
     <script>
-        const API_BASE = 'https://svc-01ka9za29rb1k3xhtqxxe8qn20.01ka4j4ktmq3vmg0nfmg652rkw.lmapp.run';
+        const API_BASE = 'https://svc-01kaaeej1ecf9k85z0f29rp6wf.01ka41m1warcc7s5zveqw1tt3z.lmapp.run';
         const USER_ID = 'demo_user_' + Date.now();
 
         let Graph;
