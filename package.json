@@ -16,6 +16,7 @@
   "dependencies": {
     "@elevenlabs/client": "^0.11.0",
     "@elevenlabs/react": "^0.11.0",
+    "@humeai/voice-react": "^0.2.9",
     "@liquidmetal-ai/raindrop-framework": "^0.10.0",
     "@modelcontextprotocol/sdk": "^1",
     "@react-three/drei": "^10.7.7",
