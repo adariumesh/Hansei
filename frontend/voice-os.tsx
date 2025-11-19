@@ -43,7 +43,7 @@ const VoiceOS = () => {
       await voice.connect({
         auth: { 
           type: 'apiKey', 
-          value: process.env.HUME_API_KEY || 'your-api-key-here' 
+          value: process.env.HUME_API_KEY || 'ZqVieTaei1w5G2dUSpkJbcHMMsganYWMkuRwcSreRqtgWugY' 
         },
         // sessionSettings: { ... }
       });
