@@ -6,6 +6,6 @@ interface Env {
 
 export default class extends Service<Env> {
   async fetch() {
-    return new Response('Intelligence pipeline stub', { status: 200 });
+    return new Response('Voice processor stub', { status: 200 });
   }
 }

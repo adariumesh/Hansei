@@ -1,5 +1,8 @@
 import { ComponentRequest, ComponentResponse, Environment } from './interfaces.js';
 import { Hono, Context, MiddlewareHandler } from 'hono';
+import { createLogger } from '../shared/logger.js';
+
+const utilLogger = createLogger('api-gateway-utils');
 
 export async function processRequest(
   env: Environment,
@@ -180,10 +183,10 @@ const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 // Middleware functions
 export const requestLogger: MiddlewareHandler = async (c, next) => {
   const start = Date.now();
-  console.log(`${c.req.method} ${c.req.url}`);
+  utilLogger.info(`${c.req.method} ${c.req.url}`);
   await next();
   const duration = Date.now() - start;
-  console.log(`${c.req.method} ${c.req.url} - ${c.res.status} (${duration}ms)`);
+  utilLogger.info(`${c.req.method} ${c.req.url} - ${c.res.status} (${duration}ms)`);
 };
 
 // Response caching middleware for GET requests
@@ -258,7 +261,7 @@ export const errorHandler: MiddlewareHandler = async (c, next) => {
   try {
     await next();
   } catch (err) {
-    console.error('Error:', err);
+    utilLogger.error('Request error', { error: err instanceof Error ? err.message : String(err) });
     return createStandardResponse(c, 500, { error: 'Internal server error' });
   }
 };
@@ -728,7 +731,7 @@ function extractBasicEntities(text: string): Array<{type: string, value: string,
   // Simple person name extraction (capitalized words)
   const nameRegex = /\b[A-Z][a-z]+ [A-Z][a-z]+\b/g;
   const names = text.match(nameRegex) || [];
-  names.forEach(name => {
+  names.forEach((name: string) => {
     if (name.split(' ').length === 2) {
       entities.push({ type: 'person', value: name, confidence: 0.6 });
     }

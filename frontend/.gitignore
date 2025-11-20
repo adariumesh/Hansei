@@ -1,0 +1,12 @@
+# Environment variables
+.env.local
+.env.production.local
+.env.development.local
+
+# Build outputs
+dist/
+build/
+*.log
+
+# Dependencies (if using npm/yarn)
+node_modules/

@@ -18,7 +18,7 @@ export interface Database {
     user_id: string;
     content: string;
     content_type: string;
-    metadata: any;
+    metadata: Record<string, unknown> | null;
     created_at: Date;
     updated_at: Date;
   };
@@ -28,7 +28,7 @@ export interface Database {
     target_id: string;
     relationship_type: string;
     strength: number;
-    metadata: any;
+    metadata: Record<string, unknown> | null;
     created_at: Date;
   };
   entities: {
@@ -37,7 +37,7 @@ export interface Database {
     name: string;
     type: string;
     confidence: number;
-    metadata: any;
+    metadata: Record<string, unknown> | null;
     created_at: Date;
     updated_at: Date;
   };
@@ -47,7 +47,7 @@ export interface Database {
     entity_b_id: string;
     relationship_type: string;
     confidence: number;
-    metadata: any;
+    metadata: Record<string, unknown> | null;
     created_at: Date;
   };
   processing_sessions: {
@@ -55,7 +55,7 @@ export interface Database {
     user_id: string;
     session_type: string;
     status: string;
-    metadata: any;
+    metadata: Record<string, unknown> | null;
     created_at: Date;
     completed_at: Date | null;
   };
@@ -64,7 +64,7 @@ export interface Database {
     user_id: string;
     title: string;
     content: string;
-    metadata: any;
+    metadata: Record<string, unknown> | null;
     created_at: Date;
   };
   document_chunks: {
@@ -72,7 +72,7 @@ export interface Database {
     document_id: string;
     chunk_index: number;
     content: string;
-    metadata: any;
+    metadata: Record<string, unknown> | null;
     created_at: Date;
   };
 }

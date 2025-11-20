@@ -11,20 +11,26 @@ export interface Env {
   annotation: Annotation<Omit<MRNObject, 'type' | 'applicationName' | 'versionId'>>;
   API_GATEWAY: ServiceStub<import('../api-gateway/index.js').default>;
   AUDIO_STORAGE: SmartBucket;
+  CHAT_SERVICE: ServiceStub<import('../chat-service/index.js').default>;
   DOCUMENT_EMBEDDINGS: VectorIndex;
   DOCUMENT_PROCESSOR: ServiceStub<import('../document-processor/index.js').default>;
   DOCUMENT_STORAGE: SmartBucket;
   ENTITY_RESOLVER: ServiceStub<import('../entity-resolver/index.js').default>;
+  EPISODIC_MEMORY: SmartMemory;
+  FRONTEND_SERVICE: ServiceStub<import('../frontend-service/index.js').default>;
   GRAPH_DATABASE: SmartSql;
-  INTELLIGENCE_PIPELINE: ServiceStub<import('../intelligence-pipeline/index.js').default>;
+  INSIGHTS_SERVICE: ServiceStub<import('../insights-service/index.js').default>;
   logger: Logger;
   mem: KvCache;
   MEMORY_CORE: ServiceStub<import('../memory-core/index.js').default>;
   MEMORY_EMBEDDINGS: VectorIndex;
   PATTERN_DETECTOR: ServiceStub<import('../pattern-detector/index.js').default>;
+  PROCEDURAL_MEMORY: SmartMemory;
   PROCESSING_QUEUE: Queue<import('../batch-processor').Body>;
   QUERY_CACHE: KvCache;
+  SEMANTIC_MEMORY: SmartMemory;
   SESSION_CACHE: KvCache;
   tracer: Tracer;
   VOICE_PROCESSOR: ServiceStub<import('../voice-processor/index.js').default>;
+  WORKING_MEMORY: SmartMemory;
 }

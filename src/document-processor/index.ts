@@ -1,6 +1,9 @@
 import { Service } from '@liquidmetal-ai/raindrop-framework';
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
+import { createLogger } from '../shared/logger.js';
+
+const serviceLogger = createLogger('document-processor');
 
 interface Env {
   DOCUMENT_STORAGE: any;
@@ -297,7 +300,7 @@ async function storeProcessingResults(env: Env, result: any, options: any): Prom
     // Store in agent memory
     await env.AGENT_MEMORY.put(storageKey, JSON.stringify(storageData));
   } catch (error) {
-    console.error('Failed to store processing results:', error);
+    serviceLogger.error('Failed to store processing results', { error: error instanceof Error ? error.message : String(error) });
   }
 }
 

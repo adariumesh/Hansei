@@ -3,6 +3,15 @@
 // Converted from SQLite to PostgreSQL compatible types
 
 export const createTablesSQL = `
+CREATE TABLE IF NOT EXISTS memories (
+  id VARCHAR(100) PRIMARY KEY,
+  content TEXT NOT NULL,
+  user_id VARCHAR(100) NOT NULL,
+  timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
+  metadata JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS memory_nodes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   type VARCHAR(50) NOT NULL CHECK (type IN ('concept', 'goal', 'procedure', 'progress')),
@@ -149,6 +158,11 @@ CREATE TABLE IF NOT EXISTS procedural_memory (
 `;
 
 export const createIndexesSQL = `
+-- Memories table indexes
+CREATE INDEX IF NOT EXISTS idx_memories_user_id ON memories(user_id);
+CREATE INDEX IF NOT EXISTS idx_memories_timestamp ON memories(timestamp);
+CREATE INDEX IF NOT EXISTS idx_memories_created_at ON memories(created_at);
+
 -- Core graph database indexes
 CREATE INDEX IF NOT EXISTS idx_memory_nodes_type ON memory_nodes(type);
 CREATE INDEX IF NOT EXISTS idx_memory_nodes_weight ON memory_nodes(weight);

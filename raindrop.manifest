@@ -1,226 +1,140 @@
 application "hansei" {
   
-  # Core public services
-  service "hansei-intelligence-processor" {
-    visibility = "public"
-  }
-  
+  # === PUBLIC SERVICES ===
+  # Single public API gateway - routes to all private services
   service "api-gateway" {
     visibility = "public"
   }
   
-  # MCP integration for Claude Code
-  mcp_service "hansei-intel-mcp" {
-    visibility = "protected"
+  # Frontend service - serves static HTML/CSS/JS
+  service "frontend-service" {
+    visibility = "public"
   }
   
-  # Private processing services
+  # === PRIVATE MICROSERVICES ===
+  # Chat and conversational AI
+  service "chat-service" {
+    visibility = "private"
+  }
+  
+  # Analytics, patterns, and insights
+  service "insights-service" {
+    visibility = "private"
+  }
+  
+  # Core memory and graph engine
   service "memory-core" {
     visibility = "private"
   }
   
-  service "intelligence-pipeline" {
-    visibility = "private"
-  }
-  
+  # Document and search engine
   service "search-engine" {
     visibility = "private"  
   }
   
+  # Entity extraction
   service "entity-resolver" {
     visibility = "private"
   }
   
+  # Pattern detection
   service "pattern-detector" {
     visibility = "private"
   }
   
+  # Voice processing
   service "voice-processor" {
     visibility = "private"
   }
   
+  # Document processing
   service "document-processor" {
     visibility = "private"
   }
   
-  # NEW: Vultr Serverless Inference Sleep Cycle
-  service "vultr-inference-processor" {
-    visibility = "private"
-    platform = "vultr_serverless"
-    compute {
-      model = "mixtral-8x7b"
-      memory = "8GB"
-      timeout = "900s"
-    }
+  # === MCP SERVICE ===
+  mcp_service "hansei-intel-mcp" {
+    visibility = "protected"
   }
   
-  # Enhanced SmartMemory 4-tier hierarchy
-  smartmemory "agent-memory" {
-    tier = "working"
-    retention_policy = "session_based"
-    max_size = "100MB"
+  # Memory and storage systems - 4-tier cognitive architecture
+  # Tier 1: Working Memory (active sessions, 1-hour TTL)
+  smartmemory "working-memory" {
   }
   
+  # Tier 2: Episodic Memory (session summaries, life events)
   smartmemory "episodic-memory" {
-    tier = "episodic"
-    retention_policy = "temporal_decay"
-    max_size = "1GB"
-    compression = "enabled"
   }
   
+  # Tier 3: Semantic Memory (knowledge graph, facts, entities)
   smartmemory "semantic-memory" {
-    tier = "semantic"
-    retention_policy = "knowledge_based"
-    max_size = "10GB"
-    indexing = "full_text"
   }
   
+  # Tier 4: Procedural Memory (habits, skills, behavioral patterns)
   smartmemory "procedural-memory" {
-    tier = "procedural"
-    retention_policy = "user_preference"
-    max_size = "500MB"
-    adaptation = "enabled"
   }
   
-  # Vultr PostgreSQL database connection
+  # Legacy memory (keep for backward compatibility during migration)
+  smartmemory "agent-memory" {
+  }
+  
   smartsql "graph-database" {
-    provider = "vultr_postgresql"
-    connection_pool = "enabled"
-    max_connections = 20
-    ssl_mode = "require"
-    schema_version = "2.0"
   }
   
   smartbucket "document-storage" {
-    provider = "vultr_object_storage"
-    encryption = "enabled"
-    versioning = "enabled"
   }
   
   smartbucket "audio-storage" {
-    provider = "vultr_object_storage"
-    encryption = "enabled"
-    lifecycle_policy = "auto_archive"
   }
   
-  # Enhanced vector storage for embeddings
+  # Vector storage for embeddings
   vector_index "memory-embeddings" {
     dimensions = 1536
     metric = "cosine"
-    provider = "vultr_vector_db"
-    sharding = "enabled"
   }
   
   vector_index "document-embeddings" {
     dimensions = 1536
     metric = "cosine"
-    provider = "vultr_vector_db"
-    batch_indexing = "enabled"
   }
   
-  vector_index "entity-embeddings" {
-    dimensions = 768
-    metric = "cosine"
-    provider = "vultr_vector_db"
-    real_time_updates = "enabled"
-  }
-  
-  # Enhanced processing queues with Vultr integration
+  # Processing queues
   queue "processing-queue" {
-    provider = "vultr_message_queue"
-    max_batch_size = 100
-    visibility_timeout = "30s"
   }
   
   queue "analysis-queue" {
-    provider = "vultr_message_queue"
-    max_batch_size = 50
-    dead_letter_queue = "enabled"
-  }
-  
-  queue "inference-queue" {
-    provider = "vultr_message_queue"
-    priority_levels = 3
-    batch_processing = "enabled"
   }
   
   # Background processing observers
-  observer "audio-processor" {
-    source {
-      bucket = "audio-storage"
-    }
-    trigger = "upload_complete"
-  }
+  # TEMPORARILY DISABLED - observers causing deployment errors
+  # observer "audio-processor" {
+  #   source {
+  #     bucket = "audio-storage"
+  #   }
+  # }
   
-  observer "document-analyzer" {
-    source {
-      bucket = "document-storage"
-    }
-    trigger = "upload_complete"
-  }
+  # observer "document-analyzer" {
+  #   source {
+  #     bucket = "document-storage"
+  #   }
+  # }
   
   observer "batch-processor" {
     source {
       queue = "processing-queue"
     }
-    batch_size = 10
   }
   
   observer "insight-generator" {
     source {
       queue = "analysis-queue"
     }
-    ai_model = "mixtral-8x7b"
   }
   
-  # NEW: Sleep Cycle inference observer
-  observer "sleep-cycle-processor" {
-    source {
-      queue = "inference-queue"
-    }
-    schedule = "*/15 * * * *" # Every 15 minutes
-    batch_size = 50
-    ai_model = "mixtral-8x7b"
-    wake_threshold = 10 # Wake up when 10+ items in queue
-  }
-  
-  # Enhanced caching with Vultr Redis
+  # Key-value cache for performance
   kv_cache "session-cache" {
-    provider = "vultr_redis"
-    ttl = "1h"
-    max_memory = "256MB"
   }
   
   kv_cache "query-cache" {
-    provider = "vultr_redis"
-    ttl = "30m"
-    max_memory = "128MB"
-  }
-  
-  kv_cache "inference-cache" {
-    provider = "vultr_redis"
-    ttl = "24h"
-    max_memory = "512MB"
-    compression = "enabled"
-  }
-  
-  # Health monitoring and metrics
-  monitor "system-health" {
-    endpoints = [
-      "/health",
-      "/metrics",
-      "/memory-status"
-    ]
-    interval = "30s"
-    alerts = "enabled"
-  }
-  
-  # Production deployment configuration
-  deployment {
-    region = "vultr_us_east"
-    environment = "production"
-    auto_scaling = "enabled"
-    load_balancer = "enabled"
-    ssl_termination = "edge"
   }
 }

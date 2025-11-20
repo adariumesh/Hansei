@@ -59,8 +59,11 @@ app.post('/api/store', async (c) => {
       entities: extractSimpleEntities(input)
     };
     
-    // TODO: Debug - temporarily disabled storage to test routing
-    serviceLogger.info('POST /api/store - Memory entry would be stored', { id: memoryId, user_id: memoryEntry.user_id });
+    // Store in SmartMemory for fast retrieval
+    await c.env.AGENT_MEMORY.put(memoryId, JSON.stringify(memoryEntry));
+    
+    // Store in graph database for relationships
+    await storeInGraphDatabase(c.env.GRAPH_DATABASE, memoryEntry);
     
     return c.json({
       success: true,
@@ -98,8 +101,11 @@ app.post('/api/graph/store', async (c) => {
       entities: extractSimpleEntities(input)
     };
     
-    // TODO: Debug - temporarily disabled storage to test routing
-    serviceLogger.info('POST /api/graph/store - Memory entry would be stored', { id: memoryId, user_id: memoryEntry.user_id });
+    // Store in SmartMemory for fast retrieval
+    await c.env.AGENT_MEMORY.put(memoryId, JSON.stringify(memoryEntry));
+    
+    // Store in graph database for relationships
+    await storeInGraphDatabase(c.env.GRAPH_DATABASE, memoryEntry);
     
     return c.json({
       success: true,

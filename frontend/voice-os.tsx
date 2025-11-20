@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useVoice } from '@humeai/voice-react';
+import config from './config';
 
 // Define a more specific type for graph data
 interface GraphData {
@@ -14,7 +15,7 @@ const VoiceOS = () => {
 
   const fetchGraphData = async () => {
     try {
-      const response = await fetch('/api/graph');
+      const response = await fetch(`${config.apiBase}/api/graph?user_id=${config.userId}`);
       const result: unknown = await response.json();
 
       // Type guard to check the shape of the result
@@ -40,10 +41,15 @@ const VoiceOS = () => {
 
   const handleConnect = async () => {
     try {
+      if (!config.humeApiKey) {
+        setStatus('Error: Hume API key not configured. Set VITE_HUME_API_KEY in .env.local');
+        return;
+      }
+      
       await voice.connect({
         auth: { 
           type: 'apiKey', 
-          value: process.env.HUME_API_KEY || 'ZqVieTaei1w5G2dUSpkJbcHMMsganYWMkuRwcSreRqtgWugY' 
+          value: config.humeApiKey
         },
         // sessionSettings: { ... }
       });
