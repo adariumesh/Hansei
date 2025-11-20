@@ -750,6 +750,9 @@
         <header role="banner">
             <h1 id="mainTitle">⏺ HANSEI</h1>
             <p>Your AI-Powered Memory & Knowledge Graph</p>
+            <div style="margin-top: 10px;">
+                <a href="index-3d.html" style="color: white; text-decoration: none; border: 1px solid white; padding: 5px 10px; border-radius: 5px;">Switch to 3D View</a>
+            </div>
         </header>
 
         <!-- Chat Toggle Button -->
@@ -911,6 +914,32 @@
             });
         }
 
+        function showToast(message, type) {
+            const toastId = type === 'error' ? 'errorToast' : 'successToast';
+            const messageId = type === 'error' ? 'errorMessage' : 'successMessage';
+            const toast = document.getElementById(toastId);
+            document.getElementById(messageId).textContent = message;
+            toast.style.display = 'flex';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 5000);
+
+            // Close button functionality
+            document.getElementById(`close${type === 'error' ? 'Error' : 'Success'}`).onclick = () => {
+                toast.style.display = 'none';
+            };
+        }
+
+        function showError(message) {
+            showToast(message, 'error');
+        }
+
+        function showSuccess(message) {
+            showToast(message, 'success');
+        }
+
         async function sendChatMessage() {
             const chatInput = document.getElementById('chatInput');
             const chatMessages = document.getElementById('chatMessages');
@@ -937,20 +966,25 @@
                     })
                 });
 
-                const result = await response.json();
-
-                if (response.ok) {
-                    // Add HANSEI response
-                    let responseText = result.answer || 'I received your message but couldn\'t generate a response.';
-                    let sources = result.sources || [];
-                    
-                    addChatMessage(responseText, 'hansei', sources);
-                } else {
-                    addChatMessage('Sorry, I encountered an error: ' + (result.error || 'Unknown error'), 'hansei');
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
                 }
+
+                const result = await response.json();
+                
+                // Always assume success at this point because !response.ok would have thrown
+                let responseText = result.answer || 'I received your message but couldn\'t generate a response.';
+                let sources = result.sources || [];
+                
+                addChatMessage(responseText, 'hansei', sources);
+                // Optionally show success, but chat message itself is the success indication
+                // showSuccess('Chat message sent!'); 
+
             } catch (error) {
                 console.error('Chat error:', error);
-                addChatMessage('Sorry, I\'m having trouble connecting right now. Please try again.', 'hansei');
+                showError('Chat failed: ' + error.message + '. Please try again.');
+                addChatMessage('Sorry, I\'m having trouble connecting right now. Please try again.', 'hansei'); // Keep in chat for context
             }
         }
 
@@ -1001,36 +1035,57 @@
         async function loadOrphans() {
             const resultsDiv = document.getElementById('insightResults');
             resultsDiv.innerHTML = '<div class="loading">Loading orphaned nodes...</div>';
+            showSuccess('Loading orphaned nodes...');
 
             try {
                 const response = await fetch(`${API_BASE}/api/patterns/orphans`);
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                }
+
                 const result = await response.json();
 
-                if (response.ok) {
+                // Assuming `result.success` is not strictly necessary here, but checking for `orphans` content.
+                if (result.orphans) {
                     displayInsightResults('Orphaned Nodes', result.orphans || [], 'These nodes have few connections and might represent isolated memories.');
+                    showSuccess('Orphaned nodes loaded successfully!');
                 } else {
-                    resultsDiv.innerHTML = `<div class="error">Failed to load orphaned nodes: ${result.message || 'Unknown error'}</div>`;
+                    throw new Error(result.message || 'Unknown API error when loading orphaned nodes.');
                 }
             } catch (error) {
-                resultsDiv.innerHTML = `<div class="error">Network error: ${error.message}</div>`;
+                resultsDiv.innerHTML = ''; // Clear loading message
+                console.error('Failed to load orphaned nodes:', error);
+                showError(`Failed to load orphaned nodes: ${error.message}.`);
             }
         }
 
         async function loadHubs() {
             const resultsDiv = document.getElementById('insightResults');
             resultsDiv.innerHTML = '<div class="loading">Loading hub analysis...</div>';
+            showSuccess('Loading hub analysis...');
 
             try {
                 const response = await fetch(`${API_BASE}/api/patterns/hubs`);
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                }
+
                 const result = await response.json();
 
-                if (response.ok) {
+                if (result.hubs) {
                     displayInsightResults('Hub Analysis', result.hubs || [], 'These are highly connected nodes that serve as central themes in your memories.');
+                    showSuccess('Hub analysis loaded successfully!');
                 } else {
-                    resultsDiv.innerHTML = `<div class="error">Failed to load hub analysis: ${result.message || 'Unknown error'}</div>`;
+                    throw new Error(result.message || 'Unknown API error when loading hub analysis.');
                 }
             } catch (error) {
-                resultsDiv.innerHTML = `<div class="error">Network error: ${error.message}</div>`;
+                resultsDiv.innerHTML = ''; // Clear loading message
+                console.error('Failed to load hub analysis:', error);
+                showError(`Failed to load hub analysis: ${error.message}.`);
             }
         }
 
@@ -1147,36 +1202,57 @@
         // Upload Voice
         async function uploadVoice(audioBlob) {
             const status = document.getElementById('status');
-            try {
-                const formData = new FormData();
-                formData.append('audio', audioBlob, 'recording.wav');
-                formData.append('audio_format', 'wav');
-                formData.append('user_id', USER_ID);
+            const maxRetries = 3;
+            
+            // Show processing status
+            status.textContent = 'Processing voice...';
+            status.classList.add('active');
 
-                const response = await fetch(`${API_BASE}/api/voice/ingest`, {
-                    method: 'POST',
-                    body: formData
-                });
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const formData = new FormData();
+                    formData.append('audio', audioBlob, 'recording.wav');
+                    formData.append('audio_format', 'wav');
+                    formData.append('user_id', USER_ID);
 
-                const result = await response.json();
-                
-                if (result.success) {
-                    status.textContent = '✅ Voice processed successfully!';
-                    status.classList.remove('active');
-                    addRecentEntry(result.transcript, result.extracted);
-                    setTimeout(() => {
-                        status.textContent = 'Ready to record';
-                    }, 3000);
-                    // Auto-refresh graph
-                    searchGraph();
-                } else {
-                    status.textContent = '❌ Error: ' + (result.error || 'Unknown error');
-                    status.classList.remove('active');
+                    const response = await fetch(`${API_BASE}/api/voice/ingest`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        // Check for specific error messages from the API
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        status.textContent = '✅ Voice processed successfully!';
+                        status.classList.remove('active');
+                        showSuccess('Voice memory saved!');
+                        addRecentEntry(result.transcript, result.extracted);
+                        setTimeout(() => {
+                            status.textContent = 'Ready to record';
+                        }, 3000);
+                        // Auto-refresh graph
+                        searchGraph();
+                        return; // Exit loop on success
+                    } else {
+                        throw new Error(result.error || 'Unknown API error');
+                    }
+                } catch (err) {
+                    console.error('Upload error:', err);
+                    if (i === maxRetries - 1) {
+                        status.textContent = '❌ Upload failed after retries';
+                        status.classList.remove('active');
+                        showError(`Upload failed: ${err.message}. Please try again.`);
+                    } else {
+                        status.textContent = `Retrying upload (${i + 1}/${maxRetries})...`;
+                        await new Promise(r => setTimeout(r, 1000 * (i + 1))); // Exponential backoff
+                    }
                 }
-            } catch (err) {
-                status.textContent = '❌ Upload failed';
-                status.classList.remove('active');
-                console.error('Upload error:', err);
             }
         }
 
@@ -1271,20 +1347,29 @@
             const resultsDiv = document.getElementById('results');
             
             resultsDiv.innerHTML = '<div class="loading">Searching...</div>';
+            showSuccess('Searching memories...'); // Indicate search is starting
 
             try {
                 const response = await fetch(`${API_BASE}/api/graph?query=${encodeURIComponent(query)}&limit=50&user_id=${USER_ID}`);
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+                }
+
                 const result = await response.json();
 
                 if (result.success) {
                     displayGraph(result.graph);
                     displayResults(result.rawResults);
+                    showSuccess('Memories search complete!');
                 } else {
-                    resultsDiv.innerHTML = `<div class="error">Search failed: ${result.error}</div>`;
+                    throw new Error(result.error || 'Unknown API error');
                 }
             } catch (err) {
-                resultsDiv.innerHTML = `<div class="error">Network error: ${err.message}</div>`;
                 console.error('Search error:', err);
+                resultsDiv.innerHTML = ''; // Clear loading message
+                showError(`Search failed: ${err.message}.`);
             }
         }
 

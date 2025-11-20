@@ -204,8 +204,28 @@ app.use('*', cors({
   allowHeaders: ['Content-Type', 'Authorization'],
 }));
 
-// Logging middleware
-app.use('*', logger());
+// Logging and Analytics middleware
+app.use('*', async (c, next) => {
+  const requestId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15); // Simple UUID generation
+
+  const start = Date.now();
+  await next();
+  const ms = Date.now() - start;
+
+  const userId = c.req.query('user_id') || 'anonymous'; // Extract user_id if present
+
+  // This check is to ensure c.env.logger exists before using it.
+  if (c.env.logger) {
+    c.env.logger.info('request_metrics', {
+        requestId: requestId, // Pass requestId directly
+        endpoint: c.req.path,
+        method: c.req.method,
+        status: c.res.status,
+        duration_ms: ms,
+        user_id: userId // Add user_id to metrics
+    });
+  }
+});
 
 // TEMPORARILY DISABLED ERROR HANDLER TO SEE REAL ERRORS
 // Error handling middleware
@@ -222,13 +242,30 @@ app.use('*', logger());
 // });
 
 // Health check
-app.get('/health', (c) => {
-  return c.json({ 
+app.get('/health', async (c) => {
+  const checks: { [key: string]: string } = {
     service: 'api-gateway',
-    status: 'ok', 
-    timestamp: new Date().toISOString(),
-    version: '2.0.0'
-  });
+    status: 'ok',
+    version: '2.0.0', // Using existing version
+    smartmemory: 'unknown',
+    ai: c.env.AI ? 'available' : 'unavailable'
+  };
+
+  try {
+    // Attempt a simple operation on AGENT_MEMORY to check its responsiveness
+    await c.env.AGENT_MEMORY.searchSemanticMemory('__health_check_ping__');
+    checks.smartmemory = 'healthy';
+  } catch (error) {
+    checks.smartmemory = 'unhealthy';
+    serviceLogger.error('SmartMemory health check failed', { error: error instanceof Error ? error.message : String(error) });
+  }
+
+  // Determine overall status by checking only dependencies
+  const dependenciesStatus = [checks.smartmemory, checks.ai];
+  const overallStatus = dependenciesStatus.every(dep => dep === 'healthy' || dep === 'available') ? 'ok' : 'degraded';
+  checks.status = overallStatus;
+
+  return c.json(checks, overallStatus === 'ok' ? 200 : 503);
 });
 
 // Route to chat-service
