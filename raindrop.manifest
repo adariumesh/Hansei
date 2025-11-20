@@ -1,10 +1,140 @@
-
-application "hansei-memory-core" {
-  smartmemory "agent-memory" {}
-  service "hansei-intelligence-processor" {
+application "hansei" {
+  
+  # === PUBLIC SERVICES ===
+  # Single public API gateway - routes to all private services
+  service "api-gateway" {
     visibility = "public"
   }
+  
+  # Frontend service - serves static HTML/CSS/JS
+  service "frontend-service" {
+    visibility = "public"
+  }
+  
+  # === PRIVATE MICROSERVICES ===
+  # Chat and conversational AI
+  service "chat-service" {
+    visibility = "private"
+  }
+  
+  # Analytics, patterns, and insights
+  service "insights-service" {
+    visibility = "private"
+  }
+  
+  # Core memory and graph engine
+  service "memory-core" {
+    visibility = "private"
+  }
+  
+  # Document and search engine
+  service "search-engine" {
+    visibility = "private"  
+  }
+  
+  # Entity extraction
+  service "entity-resolver" {
+    visibility = "private"
+  }
+  
+  # Pattern detection
+  service "pattern-detector" {
+    visibility = "private"
+  }
+  
+  # Voice processing
+  service "voice-processor" {
+    visibility = "private"
+  }
+  
+  # Document processing
+  service "document-processor" {
+    visibility = "private"
+  }
+  
+  # === MCP SERVICE ===
   mcp_service "hansei-intel-mcp" {
     visibility = "protected"
+  }
+  
+  # Memory and storage systems - 4-tier cognitive architecture
+  # Tier 1: Working Memory (active sessions, 1-hour TTL)
+  smartmemory "working-memory" {
+  }
+  
+  # Tier 2: Episodic Memory (session summaries, life events)
+  smartmemory "episodic-memory" {
+  }
+  
+  # Tier 3: Semantic Memory (knowledge graph, facts, entities)
+  smartmemory "semantic-memory" {
+  }
+  
+  # Tier 4: Procedural Memory (habits, skills, behavioral patterns)
+  smartmemory "procedural-memory" {
+  }
+  
+  # Legacy memory (keep for backward compatibility during migration)
+  smartmemory "agent-memory" {
+  }
+  
+  smartsql "graph-database" {
+  }
+  
+  smartbucket "document-storage" {
+  }
+  
+  smartbucket "audio-storage" {
+  }
+  
+  # Vector storage for embeddings
+  vector_index "memory-embeddings" {
+    dimensions = 1536
+    metric = "cosine"
+  }
+  
+  vector_index "document-embeddings" {
+    dimensions = 1536
+    metric = "cosine"
+  }
+  
+  # Processing queues
+  queue "processing-queue" {
+  }
+  
+  queue "analysis-queue" {
+  }
+  
+  # Background processing observers
+  # TEMPORARILY DISABLED - observers causing deployment errors
+  # observer "audio-processor" {
+  #   source {
+  #     bucket = "audio-storage"
+  #   }
+  # }
+  
+  # observer "document-analyzer" {
+  #   source {
+  #     bucket = "document-storage"
+  #   }
+  # }
+  
+  observer "batch-processor" {
+    source {
+      queue = "processing-queue"
+    }
+  }
+  
+  observer "insight-generator" {
+    source {
+      queue = "analysis-queue"
+    }
+  }
+  
+  # Key-value cache for performance
+  kv_cache "session-cache" {
+  }
+  
+  kv_cache "query-cache" {
   }
 }

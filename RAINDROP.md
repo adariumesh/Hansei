@@ -1,4 +1,4 @@
-# hansei-memory-core
+# hansei
 
 A Raindrop application built with Hono.js and modern web technologies.
 
@@ -63,7 +63,7 @@ A Raindrop application built with Hono.js and modern web technologies.
 ## Project Structure
 
 ```
-hansei-memory-core/
+hansei/
 ├── src/
 │   ├── _app/              # App-level configuration (see below)
 │   └── handlers/          # Your service/actor/observer handlers
@@ -146,7 +146,7 @@ export const cors = corsAllowAll;
 Your `raindrop.manifest` defines all resources and modules:
 
 ```raindrop
-application "hansei-memory-core" {
+application "hansei" {
   // Services (HTTP endpoints)
   service "api" {
     visibility = "protected"  // public, protected, private

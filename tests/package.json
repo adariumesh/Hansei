@@ -1,0 +1,16 @@
+{
+  "name": "hansei-tests",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "bash tests/run-tests.sh",
+    "test:integration": "jest tests/integration.test.ts",
+    "test:quick": "bash tests/quick-test.sh"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@types/node": "^20.10.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.3.0"
+  }
+}

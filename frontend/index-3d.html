@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HANSEI - 3D Memory Graph</title>
-    <script src="https://unpkg.com/3d-force-graph"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load THREE.js first -->
+    <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
+    <!-- Then load 3d-force-graph which depends on THREE -->
+    <script src="https://unpkg.com/3d-force-graph@1.70.0/dist/3d-force-graph.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -13,392 +17,1086 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0a0e27;
-            color: white;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             overflow: hidden;
         }
 
-        #header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: rgba(10, 14, 39, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 20px;
-            z-index: 1000;
-            border-bottom: 2px solid #667eea;
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
         }
 
-        h1 {
-            font-size: 2em;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes ripple {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(4); opacity: 0; }
+        }
+
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-ripple {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-ripple::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1) translate(-50%, -50%);
+            transform-origin: 50% 50%;
+        }
+
+        .btn-ripple:active::after {
+            animation: ripple 0.6s ease-out;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #00ffff 0%, #ff00ff 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-        }
-
-        .controls {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .input-group {
-            display: flex;
-            gap: 10px;
-            flex: 1;
-            min-width: 300px;
-        }
-
-        input, button, textarea {
-            padding: 12px 20px;
-            border: 2px solid #667eea;
-            border-radius: 8px;
-            background: rgba(102, 126, 234, 0.1);
-            color: white;
-            font-size: 1em;
+            background-clip: text;
+            letter-spacing: 0.1em;
+            cursor: pointer;
             transition: all 0.3s;
         }
 
-        input:focus, textarea:focus {
-            outline: none;
-            background: rgba(102, 126, 234, 0.2);
-            border-color: #764ba2;
+        .logo-text:hover {
+            letter-spacing: 0.15em;
+            filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.5));
         }
 
-        button {
-            cursor: pointer;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            font-weight: bold;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
-        }
-
-        .record-btn {
-            padding: 12px 24px;
-            border-radius: 50px;
-        }
-
-        .record-btn.recording {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        #graph-container {
-            position: fixed;
-            top: 140px;
-            left: 0;
-            right: 0;
-            bottom: 0;
-        }
-
-        #info-panel {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(10, 14, 39, 0.95);
+        .stat-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
-            padding: 20px;
-            border-radius: 15px;
-            border: 2px solid #667eea;
-            max-width: 350px;
-            z-index: 999;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            color: white;
         }
 
-        .stat {
-            margin: 10px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .stat-value {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #667eea;
-        }
-
-        .legend {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .legend-item {
+        .icon-btn {
+            width: 36px;
+            height: 36px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin: 8px 0;
-        }
-
-        .legend-color {
-            width: 20px;
-            height: 20px;
+            justify-content: center;
             border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex-shrink: 0;
         }
 
-        .status {
+        .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(0, 255, 255, 0.5);
+            transform: scale(1.1);
+        }
+
+        .icon-btn.active {
+            background: rgba(0, 255, 255, 0.2);
+            border-color: #00ffff;
+        }
+
+        /* Context menu for node actions */
+        .context-menu {
             position: fixed;
-            top: 150px;
-            right: 20px;
-            padding: 15px 25px;
-            background: rgba(102, 126, 234, 0.2);
-            border: 2px solid #667eea;
-            border-radius: 10px;
-            z-index: 999;
+            background: rgba(30, 27, 75, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 0.5rem;
+            min-width: 180px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            z-index: 10000;
             display: none;
         }
 
-        .status.show {
-            display: block;
+        .context-menu-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
         }
 
-        .text-input-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
+        .context-menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .context-menu-item.danger:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .context-menu-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 0.5rem 0;
+        }
+
+        .chat-panel {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 360px;
             background: rgba(10, 14, 39, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 20px;
-            border-radius: 15px;
-            border: 2px solid #667eea;
-            max-width: 400px;
-            z-index: 999;
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            padding: 1.25rem;
         }
 
-        .text-input-container textarea {
-            width: 100%;
-            min-height: 80px;
-            resize: vertical;
-            margin-bottom: 10px;
+        .chat-panel.collapsed {
+            transform: translateX(360px);
+        }
+
+        .chat-toggle-btn {
+            position: absolute;
+            left: -40px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 80px;
+            background: rgba(10, 14, 39, 0.95);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-right: none;
+            border-radius: 12px 0 0 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .chat-toggle-btn:hover {
+            background: rgba(0, 255, 255, 0.2);
+        }
+
+        .chat-toggle-btn svg {
+            transition: transform 0.3s;
+        }
+
+        .chat-panel.collapsed .chat-toggle-btn svg {
+            transform: rotate(180deg);
+        }
+
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+        }
+
+        .nebula-bg {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1a2e 50%, #16213e 100%);
+            z-index: -2;
+        }
+
+        .nebula-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            mix-blend-mode: screen;
+            animation: pulse 4s ease-in-out infinite;
         }
     </style>
 </head>
 <body>
-    <div id="header">
-        <h1>⏺ HANSEI - 3D Memory Graph</h1>
-        <div class="controls">
-            <div class="input-group">
-                <input type="text" id="searchInput" placeholder="Search memories..." value="health goals">
-                <button onclick="loadGraph()">🔍 Search</button>
-            </div>
-            <div class="input-group">
-                <input type="text" id="textInput" placeholder="What's on your mind...">
-                <button onclick="submitText()">💾 Save</button>
-            </div>
-            <button class="record-btn" id="recordBtn" onclick="toggleRecording()">🎙️ Record</button>
-        </div>
+    <!-- Nebula Background -->
+    <div class="nebula-bg"></div>
+    <div style="position: fixed; inset: 0; z-index: -1; opacity: 0.3;">
+        <div class="nebula-orb" style="top: 20%; left: 20%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(138, 43, 226, 0.8) 0%, transparent 70%);"></div>
+        <div class="nebula-orb" style="top: 60%; right: 20%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(0, 191, 255, 0.6) 0%, transparent 70%); animation-delay: 1s;"></div>
+        <div class="nebula-orb" style="bottom: 20%; left: 40%; width: 450px; height: 450px; background: radial-gradient(circle, rgba(0, 255, 255, 0.5) 0%, transparent 70%); animation-delay: 2s;"></div>
     </div>
 
-    <div id="graph-container"></div>
+    <!-- Main Layout -->
+    <div class="flex flex-col h-screen">
+        <!-- Top Navigation Bar -->
+        <div class="glass border-b border-white/10 px-6 py-3 flex items-center justify-between z-50">
+            <div class="flex items-center gap-4">
+                <h1 class="logo-text" onclick="window.location.reload()">⏺ HANSEI</h1>
+                <div class="flex gap-2">
+                    <!-- Mode Indicator -->
+                    <div class="stat-chip bg-gradient-to-r from-purple-500/20 to-cyan-500/20">
+                        <span class="text-yellow-400">★</span>
+                        <span class="text-white font-semibold text-xs">DEMO MODE</span>
+                        <span class="text-white/60 text-xs">Anne Frank</span>
+                    </div>
+                    <div class="stat-chip">
+                        <span class="text-cyan-400">●</span>
+                        <span id="top-node-count">0</span>
+                        <span class="text-white/60 text-xs">nodes</span>
+                    </div>
+                    <div class="stat-chip">
+                        <span class="text-purple-400">●</span>
+                        <span id="top-memory-count">0</span>
+                        <span class="text-white/60 text-xs">memories</span>
+                    </div>
+                    <div class="stat-chip">
+                        <span class="text-green-400">●</span>
+                        <span id="top-ai-count">0</span>
+                        <span class="text-white/60 text-xs">AI analyzed</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <!-- Search Bar -->
+                <div class="relative">
+                    <input
+                        type="text"
+                        id="global-search"
+                        placeholder="Search memories..."
+                        class="glass rounded-full px-4 py-2 pl-10 text-white text-sm placeholder-white/40 focus:outline-none focus:border-cyan-500 border border-white/20 w-56"
+                    />
+                    <svg class="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+                
+                <!-- Theme Toggle -->
+                <button id="theme-toggle" class="icon-btn" title="Toggle Dream Mode">
+                    <span id="theme-icon">🌙</span>
+                </button>
+                
+                <!-- Help Button -->
+                <button id="help-btn" class="icon-btn" title="Keyboard Shortcuts">
+                    <span>?</span>
+                </button>
+            </div>
+        </div>
 
-    <div id="info-panel">
-        <h3>Graph Stats</h3>
-        <div class="stat">
-            <span>Nodes:</span>
-            <span class="stat-value" id="nodeCount">0</span>
-        </div>
-        <div class="stat">
-            <span>Connections:</span>
-            <span class="stat-value" id="edgeCount">0</span>
-        </div>
-        <div class="stat">
-            <span>Memories:</span>
-            <span class="stat-value" id="memoryCount">0</span>
-        </div>
-        <div class="legend">
-            <strong>Node Types:</strong>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #667eea;"></div>
-                <span>Goals</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #f093fb;"></div>
-                <span>Habits</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #43e97b;"></div>
-                <span>Projects</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #ffd89b;"></div>
-                <span>Objects</span>
-            </div>
-        </div>
-    </div>
+        <div class="flex flex-1 overflow-hidden">
+            <!-- Full Width 3D Canvas -->
+            <div class="w-full relative">
+                <div id="graph-container" class="w-full h-full"></div>
+            
+                <!-- Stats HUD (Bottom Left) -->
+                <div class="absolute bottom-6 left-6 glass rounded-2xl p-5 shadow-2xl w-64">
+                    <h3 class="text-white font-bold mb-3 text-base">Memory Graph Stats</h3>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-white/60 text-xs">Nodes</span>
+                            <span class="text-cyan-400 text-xl font-bold" id="node-count">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-white/60 text-xs">Connections</span>
+                            <span class="text-purple-400 text-xl font-bold" id="edge-count">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-white/60 text-xs">Memories</span>
+                            <span class="text-pink-400 text-xl font-bold" id="memory-count">0</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Legend -->
+                    <div class="mt-3 pt-3 border-t border-white/10">
+                        <p class="text-white/60 text-xs font-semibold mb-2">Node Types</p>
+                        <div class="grid grid-cols-2 gap-1.5 text-xs">
+                            <div class="flex items-center gap-1.5">
+                                <div class="w-2.5 h-2.5 rounded-full bg-cyan-500"></div>
+                                <span class="text-white/70">Goals</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <div class="w-2.5 h-2.5 rounded-full" style="background: #ff00ff;"></div>
+                                <span class="text-white/70">Habits</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <div class="w-2.5 h-2.5 rounded-full" style="background: #ffaa00;"></div>
+                                <span class="text-white/70">Events</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <div class="w-2.5 h-2.5 rounded-full" style="background: #00ff88;"></div>
+                                <span class="text-white/70">Insights</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-    <div class="status" id="status"></div>
+                <!-- Command Bar (Bottom Center) -->
+                <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 glass rounded-full px-6 py-3 shadow-2xl">
+                    <div class="flex items-center gap-4 text-xs">
+                        <button class="text-cyan-400 hover:text-cyan-300 transition font-semibold">⚡ Expand All</button>
+                        <div class="w-px h-4 bg-white/30"></div>
+                        <button class="text-purple-400 hover:text-purple-300 transition font-semibold">🌀 Focus Mode</button>
+                        <div class="w-px h-4 bg-white/30"></div>
+                        <button class="text-pink-400 hover:text-pink-300 transition font-semibold">💫 Reset View</button>
+                    </div>
+                </div>
+
+                <!-- Context Menu for Node Actions -->
+                <div id="context-menu" class="context-menu">
+                    <div class="context-menu-item" onclick="pinMemory()">
+                        <span>📌</span>
+                        <span>Pin Memory</span>
+                    </div>
+                    <div class="context-menu-item" onclick="markSensitive()">
+                        <span>🔒</span>
+                        <span>Mark Sensitive</span>
+                    </div>
+                    <div class="context-menu-divider"></div>
+                    <div class="context-menu-item danger" onclick="deleteMemory()">
+                        <span>🗑️</span>
+                        <span>Delete Memory</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Retractable Neural Control Panel (Right Side) -->
+            <div id="chat-panel" class="chat-panel">
+                <button class="chat-toggle-btn" onclick="toggleChatPanel()">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+
+                <!-- Panel Content -->
+                <div class="flex flex-col h-full">
+                    <!-- Header -->
+                    <div class="mb-5">
+                        <h2 class="text-white text-xl font-bold mb-1">⚡ Neural Control</h2>
+                        <p class="text-white/60 text-xs">AI Co-pilot Active</p>
+                    </div>
+
+                    <!-- Audio Visualizer -->
+                    <div class="mb-5">
+                        <canvas id="audio-viz" width="120" height="120" class="mx-auto"></canvas>
+                        <button id="voice-btn" class="w-full mt-3 py-2.5 rounded-full font-semibold transition-all bg-white/10 border-2 border-white/20 text-white hover:bg-white/20 text-sm btn-ripple">
+                            🎤 Start Voice
+                        </button>
+                    </div>
+
+                    <!-- Sleep Cycle Button -->
+                    <button id="sleep-btn" class="w-full py-3 mb-5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-2xl transition-all shadow-lg hover:shadow-purple-500/50 text-sm btn-ripple">
+                        🌙 Trigger Sleep Cycle
+                    </button>
+
+                    <!-- Conversation Section -->
+                    <div class="flex-1 flex flex-col min-h-0 mb-3">
+                        <h3 class="text-white text-sm font-bold mb-3">💬 Conversation</h3>
+                        
+                        <!-- Chat Stream -->
+                        <div id="chat-stream" class="flex-1 overflow-y-auto space-y-2 scrollbar-thin mb-3">
+                            <div class="text-left">
+                                <div class="inline-block max-w-[90%] p-2.5 rounded-2xl glass">
+                                    <p class="text-white text-xs">Welcome to HANSEI. Your neural memory graph is ready.</p>
+                                    <div class="mt-2 glass rounded-xl p-2.5">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <p class="text-white/60 text-xs">Active Memories</p>
+                                                <p class="text-white text-base font-bold mt-0.5">24</p>
+                                            </div>
+                                            <div class="text-xl text-green-400">↗</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Input Area -->
+                        <div class="space-y-2 mt-auto">
+                            <!-- Voice Recording Status -->
+                            <div id="recording-indicator" class="hidden glass rounded-xl px-3 py-1.5 flex items-center gap-2">
+                                <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                                <span class="text-white text-xs">Recording...</span>
+                            </div>
+                            
+                            <div class="flex gap-2 items-center">
+                                <!-- Attachment Button -->
+                                <button id="attach-btn" class="icon-btn btn-ripple flex-shrink-0" title="Attach file">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                                    </svg>
+                                </button>
+                                
+                                <!-- Voice Record Button -->
+                                <button id="record-btn" class="icon-btn btn-ripple flex-shrink-0" title="Voice record">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                                    </svg>
+                                </button>
+                                
+                                <input
+                                    type="text"
+                                    id="text-input"
+                                    placeholder="Type a memory..."
+                                    class="flex-1 glass rounded-xl px-3 py-2 text-white text-sm placeholder-white/40 focus:outline-none focus:border-cyan-500 focus:bg-white/15 border border-white/20"
+                                />
+                                <button id="submit-btn" class="bg-cyan-500 hover:bg-cyan-400 text-white p-2 rounded-xl font-semibold transition-all btn-ripple flex-shrink-0">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <!-- Keyboard Shortcuts Overlay -->
+    <div id="shortcuts-overlay" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center" onclick="toggleShortcuts()">
+            <div class="glass rounded-3xl p-8 max-w-2xl" onclick="event.stopPropagation()">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-white text-2xl font-bold">⌨️ Keyboard Shortcuts</h2>
+                    <button onclick="toggleShortcuts()" class="text-white/60 hover:text-white text-2xl">&times;</button>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-white">
+                    <div class="flex items-center gap-3">
+                        <kbd class="px-3 py-2 bg-white/10 rounded font-mono">?</kbd>
+                        <span>Show shortcuts</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <kbd class="px-3 py-2 bg-white/10 rounded font-mono">Esc</kbd>
+                        <span>Close overlay</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <kbd class="px-3 py-2 bg-white/10 rounded font-mono">Space</kbd>
+                        <span>Toggle voice</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <kbd class="px-3 py-2 bg-white/10 rounded font-mono">Ctrl+S</kbd>
+                        <span>Sleep cycle</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <kbd class="px-3 py-2 bg-white/10 rounded font-mono">Ctrl+F</kbd>
+                        <span>Focus search</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <kbd class="px-3 py-2 bg-white/10 rounded font-mono">Ctrl+T</kbd>
+                        <span>Toggle theme</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <kbd class="px-3 py-2 bg-white/10 rounded font-mono">Enter</kbd>
+                        <span>Send message</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <kbd class="px-3 py-2 bg-white/10 rounded font-mono">Ctrl+R</kbd>
+                        <span>Reset camera</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
     <script>
-        const API_BASE = 'https://svc-01ka9tm46dtzqcvz88z5v3c9kc.01ka41m1warcc7s5zveqw1tt3z.lmapp.run';
-        const USER_ID = 'demo_user_' + Date.now();
+        const API_BASE = 'https://svc-01kabqaz48d5vvdjmxc6pxcr7e.01ka41m1warcc7s5zveqw1tt3z.lmapp.run';
+        const USER_ID = 'demo_anne_frank_v2'; // Fresh clean slate for demo - v2
+
+        const NODE_COLORS = {
+            goal: '#00ffff',
+            habit: '#ff00ff',
+            person: '#4facfe',
+            project: '#43e97b',
+            emotion: '#fa709a',
+            object: '#ffd89b'
+        };
 
         let Graph;
+        let voiceActive = false;
+        let sleepMode = false;
+        let isRecording = false;
         let mediaRecorder = null;
         let audioChunks = [];
 
         // Initialize 3D Graph
         function initGraph() {
+            console.log('=== Initializing Graph ===');
+            console.log('ForceGraph3D available?', typeof ForceGraph3D);
+            console.log('THREE available?', typeof THREE);
+            
             const container = document.getElementById('graph-container');
+            console.log('Container element:', container);
+            
+            if (typeof ForceGraph3D === 'undefined') {
+                console.error('ForceGraph3D is not defined! Check if script loaded correctly.');
+                return;
+            }
             
             Graph = ForceGraph3D()(container)
-                .backgroundColor('#0a0e27')
-                .nodeLabel('label')
-                .nodeAutoColorBy('type')
-                .nodeVal(node => node.weight * 10)
-                .nodeColor(node => getNodeColor(node.type))
-                .linkColor(() => 'rgba(255,255,255,0.2)')
-                .linkWidth(2)
-                .linkDirectionalParticles(2)
-                .linkDirectionalParticleWidth(2)
-                .linkDirectionalParticleSpeed(0.005)
-                .onNodeClick(node => {
-                    showStatus(`${node.type}: ${node.label}`);
+                .backgroundColor('rgba(0,0,0,0)')
+                .showNavInfo(false)
+                .nodeLabel(node => {
+                    // Build enhanced tooltip with AI analysis
+                    const aiInfo = node.ai_analysis ? `
+                        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">
+                            <div style="color: #00ffff; font-weight: bold; margin-bottom: 4px;">🤖 AI Analysis</div>
+                            <div style="color: #a0a0a0; font-size: 11px;">
+                                Entities: ${node.ai_analysis.entities_found || 0} • 
+                                Relationships: ${node.ai_analysis.relationships_found || 0}<br>
+                                Themes: ${(node.ai_analysis.themes || []).join(', ')}<br>
+                                Sentiment: <span style="color: ${node.ai_analysis.sentiment === 'positive' ? '#00ff00' : node.ai_analysis.sentiment === 'negative' ? '#ff4444' : '#ffaa00'}">${node.ai_analysis.sentiment || 'neutral'}</span>
+                            </div>
+                        </div>
+                    ` : '';
+                    
+                    const tierBadge = node.tier ? `<span style="background: rgba(0,255,255,0.2); padding: 2px 6px; border-radius: 4px; font-size: 10px;">${node.tier}</span>` : '';
+                    const pinnedBadge = node.pinned ? '<span style="color: #ffaa00;">📌</span>' : '';
+                    const sensitiveBadge = node.sensitive ? '<span style="color: #ff4444;">🔒</span>' : '';
+                    
+                    return `
+                        <div style="
+                            background: rgba(0, 0, 0, 0.95);
+                            backdrop-filter: blur(10px);
+                            border: 1px solid rgba(255, 255, 255, 0.2);
+                            border-radius: 12px;
+                            padding: 12px 16px;
+                            color: white;
+                            font-size: 12px;
+                            max-width: 300px;
+                        ">
+                            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                                <strong style="font-size: 14px;">${node.label}</strong>
+                                ${pinnedBadge} ${sensitiveBadge}
+                            </div>
+                            <div style="color: #a0a0a0; margin-bottom: 4px;">
+                                ${node.type} • Level ${node.level} ${tierBadge}
+                            </div>
+                            ${node.themes ? '<div style="color: #888; font-size: 11px;">Themes: ' + node.themes.join(', ') + '</div>' : ''}
+                            <div style="color: #888; font-size: 11px;">Weight: ${(node.weight || 0.5).toFixed(2)}</div>
+                            ${aiInfo}
+                        </div>
+                    `;
                 })
-                .onNodeHover(node => {
-                    container.style.cursor = node ? 'pointer' : null;
+                .nodeThreeObject(node => createGlassmorphNode(node))
+                .nodeVal(node => {
+                    if (node.id === 'central') return 45;  // Larger central node
+                    if (node.level === 1) return 30;  // Larger domain nodes
+                    // Memory nodes sized by importance weight (bigger range)
+                    return Math.max(node.weight * 25, 12);
+                })
+                .linkWidth(link => {
+                    // Thicker links for stronger correlations
+                    if (link.strength === 'strong') return 4;
+                    if (link.strength === 'medium') return 2.5;
+                    if (link.type === 'semantic_correlation') return 1.5;
+                    return 1;
+                })
+                .linkOpacity(link => {
+                    // More visible for stronger correlations
+                    if (link.strength === 'strong') return 0.8;
+                    if (link.strength === 'medium') return 0.5;
+                    if (link.type === 'semantic_correlation') return 0.4;
+                    return 0.2;
+                })
+                .linkColor(link => {
+                    // Color by correlation strength
+                    if (link.strength === 'strong') return '#ff00ff';  // Magenta for strong
+                    if (link.strength === 'medium') return '#00ffff'; // Cyan for medium
+                    if (link.type === 'semantic_correlation') return '#4facfe'; // Blue for weak
+                    return '#666666'; // Gray for structural
+                })
+                .onNodeClick(node => {
+                    const distance = 100;
+                    const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+                    Graph.cameraPosition(
+                        { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio },
+                        node,
+                        1000
+                    );
+                    addChatMessage(`Selected: ${node.label}`, 'assistant');
+                })
+                .onNodeRightClick(node => {
+                    // Show context menu for memory nodes (not central or theme nodes)
+                    if (node.memory_id && node.level !== 0) {
+                        showContextMenu(node, event);
+                    }
                 });
+            
+            // Configure D3 forces for correlation-based clustering
+            Graph.d3Force('link').distance(link => {
+                // Stronger correlations = shorter distance (nodes closer together)
+                if (link.strength === 'strong') return 50;
+                if (link.strength === 'medium') return 100;
+                if (link.type === 'semantic_correlation') return 150;
+                return 200;
+            });
+            
+            Graph.d3Force('charge').strength(-300);  // Repulsion between nodes
+            Graph.d3Force('center').strength(0.1);   // Weak pull to center
 
-            // Camera settings for better view
-            Graph.cameraPosition({ z: 300 });
+            // Enhanced lighting
+            const scene = Graph.scene();
+            scene.children.filter(child => child.isLight).forEach(light => scene.remove(light));
+            
+            const ambientLight = new THREE.AmbientLight(0x404040, 2.5);
+            scene.add(ambientLight);
+
+            const dirLight1 = new THREE.DirectionalLight(0xffffff, 1.5);
+            dirLight1.position.set(100, 100, 100);
+            scene.add(dirLight1);
+
+            const centerLight = new THREE.PointLight('#00ffff', 3, 500);
+            centerLight.position.set(0, 0, 0);
+            scene.add(centerLight);
+
+            const accentLight1 = new THREE.PointLight('#ff00ff', 2, 300);
+            accentLight1.position.set(200, 100, 200);
+            scene.add(accentLight1);
+
+            Graph.cameraPosition({ x: 0, y: 200, z: 400 });
+            
+            console.log('=== Graph initialized successfully ===');
+            console.log('Graph object:', Graph);
         }
 
-        // Color mapping
-        function getNodeColor(type) {
-            const colors = {
-                'goal': '#667eea',
-                'habit': '#f093fb',
-                'person': '#4facfe',
-                'project': '#43e97b',
-                'emotion': '#fa709a',
-                'object': '#ffd89b'
-            };
-            return colors[type] || '#999';
+        // Create glassmorphism nodes with better visual weight
+        function createGlassmorphNode(node) {
+            const baseSize = Graph.nodeVal()(node);
+            const geometry = new THREE.SphereGeometry(baseSize, 32, 32);
+            
+            // Determine color based on node type
+            let color = NODE_COLORS[node.type] || '#4facfe';
+            if (node.sentiment === 'positive') color = '#43e97b';
+            if (node.sentiment === 'negative') color = '#fa709a';
+            if (node.sentiment === 'neutral') color = '#4facfe';
+            if (node.id === 'central') color = '#00ffff';
+            if (node.level === 1) color = node.color || '#ff00ff';
+            
+            // Main glassmorphic sphere
+            const material = new THREE.MeshPhysicalMaterial({
+                color: new THREE.Color(color),
+                transparent: true,
+                opacity: 0.25,
+                roughness: 0.05,
+                metalness: 0.1,
+                transmission: 0.85,
+                thickness: 0.8,
+                clearcoat: 1.0,
+                clearcoatRoughness: 0.05,
+                envMapIntensity: 1.5
+            });
+
+            const mesh = new THREE.Mesh(geometry, material);
+            
+            // Outer glow ring - larger for better visibility
+            const rimGeometry = new THREE.SphereGeometry(baseSize * 1.15, 24, 24);
+            const rimMaterial = new THREE.MeshBasicMaterial({
+                color: color,
+                transparent: true,
+                opacity: 0.4,
+                side: THREE.BackSide,
+            });
+            const rim = new THREE.Mesh(rimGeometry, rimMaterial);
+            
+            // Inner core for emphasis
+            const coreGeometry = new THREE.SphereGeometry(baseSize * 0.3, 16, 16);
+            const coreMaterial = new THREE.MeshBasicMaterial({
+                color: color,
+                transparent: true,
+                opacity: 0.6,
+            });
+            const core = new THREE.Mesh(coreGeometry, coreMaterial);
+            
+            const group = new THREE.Group();
+            group.add(mesh);
+            group.add(rim);
+            group.add(core);
+            
+            return group;
         }
 
-        // Build hierarchical structure
+        // Create glowing links
+        function createGlowingLink(link) {
+            const geometry = new THREE.CylinderGeometry(0.5, 0.5, 1, 8);
+            const material = new THREE.MeshPhysicalMaterial({
+                color: 0x00ffff,
+                transparent: true,
+                opacity: 0.2,
+                emissive: 0x00ffff,
+                emissiveIntensity: 0.5,
+            });
+            
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.rotation.x = Math.PI / 2;
+            
+            return mesh;
+        }
+
+        // Build hierarchy with intelligent correlations
         function buildHierarchy(flatData) {
             const nodes = [];
             const links = [];
 
-            // Add central "You" node
+            // Central node
             nodes.push({
                 id: 'central',
-                label: 'You',
+                label: 'Anne Frank Diary',
                 type: 'person',
                 weight: 1,
-                level: 0
+                level: 0,
+                x: 0,
+                y: 0,
+                z: 0
             });
 
-            // Group entities by type (domains)
-            const domains = {};
+            // Group nodes by themes/sentiment
+            const byTheme = {};
+            const byEntity = {};
+            
             flatData.nodes.forEach(node => {
-                if (!domains[node.type]) {
-                    domains[node.type] = [];
+                // Group by sentiment for visualization
+                const sentiment = node.sentiment || 'neutral';
+                if (!byTheme[sentiment]) byTheme[sentiment] = [];
+                byTheme[sentiment].push(node);
+                
+                // Track entities for additional grouping
+                if (node.entities && node.entities.length > 0) {
+                    node.entities.forEach(entity => {
+                        if (!byEntity[entity]) byEntity[entity] = [];
+                        byEntity[entity].push(node);
+                    });
                 }
-                domains[node.type].push(node);
             });
 
-            // Create domain nodes (layer 1)
-            Object.keys(domains).forEach(domainType => {
-                const domainId = `domain-${domainType}`;
+            // Create domain nodes for sentiments
+            const sentiments = Object.keys(byTheme);
+            sentiments.forEach((sentiment, idx) => {
+                const angle = (idx / sentiments.length) * Math.PI * 2;
+                const radius = 200;
+                const domainId = `domain-${sentiment}`;
+                
+                const colors = {
+                    'positive': '#43e97b',
+                    'negative': '#fa709a',
+                    'neutral': '#4facfe'
+                };
+                
                 nodes.push({
                     id: domainId,
-                    label: domainType.toUpperCase(),
-                    type: domainType,
+                    label: sentiment.toUpperCase(),
+                    type: sentiment,
                     weight: 0.8,
-                    level: 1
+                    level: 1,
+                    color: colors[sentiment] || '#999999',
+                    x: Math.cos(angle) * radius,
+                    y: 0,
+                    z: Math.sin(angle) * radius
                 });
 
-                // Connect domain to central
-                links.push({
-                    source: 'central',
-                    target: domainId
-                });
+                links.push({ source: domainId, target: 'central', weight: 0.5 });
 
-                // Add entity nodes (layer 2+)
-                domains[domainType].forEach((entity, idx) => {
-                    const entityId = `${domainType}-${idx}`;
+                // Add actual memory nodes with their original IDs and positions
+                byTheme[sentiment].forEach((entity, entityIdx) => {
+                    const entityAngle = angle + (entityIdx / byTheme[sentiment].length) * 0.5 - 0.25;
+                    const entityRadius = 380;
+                    
+                    // Use the actual node data from API
                     nodes.push({
-                        id: entityId,
+                        id: entity.id,
                         label: entity.label,
                         type: entity.type,
-                        weight: entity.weight,
-                        level: 2
+                        weight: entity.weight || 0.5,
+                        fullContent: entity.fullContent,
+                        themes: entity.themes || [],
+                        entities: entity.entities || [],
+                        sentiment: entity.sentiment,
+                        level: 2,
+                        x: Math.cos(entityAngle) * entityRadius,
+                        y: (Math.random() - 0.5) * 100,
+                        z: Math.sin(entityAngle) * entityRadius
                     });
 
-                    // Connect entity to domain
-                    links.push({
-                        source: domainId,
-                        target: entityId
+                    links.push({ 
+                        source: entity.id, 
+                        target: domainId,
+                        weight: 0.3
                     });
                 });
             });
-
-            // Add relationship edges (cross-links)
-            flatData.edges.forEach((edge, idx) => {
-                // Find matching nodes
-                const sourceNode = nodes.find(n => n.label === edge.source);
-                const targetNode = nodes.find(n => n.label === edge.target);
-
-                if (sourceNode && targetNode) {
+            
+            // Add semantic correlation edges from API
+            if (flatData.edges && flatData.edges.length > 0) {
+                flatData.edges.forEach(edge => {
                     links.push({
-                        source: sourceNode.id,
-                        target: targetNode.id,
-                        type: edge.type
+                        source: edge.source,
+                        target: edge.target,
+                        weight: edge.weight,
+                        type: edge.type,
+                        strength: edge.strength
                     });
-                }
-            });
+                });
+            }
 
+            console.log(`Built hierarchy: ${nodes.length} nodes, ${links.length} links`);
+            console.log(`Correlations: ${flatData.edges ? flatData.edges.length : 0} semantic edges`);
+            
             return { nodes, links };
         }
 
-        // Load and visualize graph
-        async function loadGraph() {
-            const query = document.getElementById('searchInput').value || 'all';
-            showStatus('Loading graph...');
-
+        // Load graph data
+        async function loadGraph(query = 'diary Anne Frank') {
             try {
-                const response = await fetch(`${API_BASE}/api/graph?query=${encodeURIComponent(query)}&limit=50&user_id=${USER_ID}`);
+                console.log('=== Loading graph ===');
+                console.log('Loading graph with query:', query);
+                const url = `${API_BASE}/api/graph?user_id=${USER_ID}&query=${encodeURIComponent(query)}&limit=200`;
+                console.log('API URL:', url);
+                
+                const response = await fetch(url);
+                console.log('Response status:', response.status);
+                console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const result = await response.json();
-
-                if (result.success) {
+                console.log('API Result keys:', Object.keys(result));
+                console.log('Success:', result.success);
+                console.log('Memories count:', result.memories?.length);
+                console.log('Graph nodes:', result.graph?.nodes?.length);
+                console.log('Graph edges:', result.graph?.edges?.length);
+                console.log('Intelligence:', result.intelligence);
+                
+                if (result.success && result.graph && result.graph.nodes) {
+                    console.log('Building hierarchy from graph with', result.graph.nodes.length, 'nodes');
                     const hierarchical = buildHierarchy(result.graph);
+                    console.log('Hierarchical data created:',hierarchical.nodes.length, 'nodes,', hierarchical.links.length, 'links');
                     
+                    if (!Graph) {
+                        console.error('Graph object not initialized!');
+                        return;
+                    }
+                    
+                    console.log('Setting graph data...');
                     Graph.graphData(hierarchical);
+                    console.log('Graph data set successfully!');
 
                     // Update stats
-                    document.getElementById('nodeCount').textContent = hierarchical.nodes.length;
-                    document.getElementById('edgeCount').textContent = hierarchical.links.length;
-                    document.getElementById('memoryCount').textContent = result.rawResults.length;
-
-                    showStatus('Graph loaded!', 2000);
+                    const memoryCount = result.memories?.length || 0;
+                    document.getElementById('node-count').textContent = hierarchical.nodes.length;
+                    document.getElementById('edge-count').textContent = hierarchical.links.length;
+                    document.getElementById('memory-count').textContent = memoryCount;
+                    
+                    // Update top bar stats
+                    document.getElementById('top-node-count').textContent = hierarchical.nodes.length;
+                    document.getElementById('top-memory-count').textContent = memoryCount;
+                    
+                    console.log('=== Graph loaded successfully! ===');
+                    console.log('Stats: Nodes:', hierarchical.nodes.length, 'Links:', hierarchical.links.length, 'Memories:', memoryCount);
                 } else {
-                    showStatus('Error loading graph', 3000);
+                    console.error('API returned unexpected structure');
+                    console.error('result.success:', result.success);
+                    console.error('result.graph exists:', !!result.graph);
+                    console.error('result.graph.nodes exists:', !!result.graph?.nodes);
+                    console.error('Full result:', JSON.stringify(result, null, 2));
                 }
             } catch (err) {
-                showStatus('Network error', 3000);
+                console.error('Failed to load graph:', err);
+                console.error('Error message:', err.message);
+                console.error('Error stack:', err.stack);
+            }
+        }
+
+        // Audio visualizer
+        function initAudioVisualizer() {
+            const canvas = document.getElementById('audio-viz');
+            const ctx = canvas.getContext('2d');
+            let animationId;
+
+            function draw() {
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                const baseRadius = 30;
+                const radius = voiceActive ? baseRadius + Math.sin(Date.now() * 0.005) * 10 : baseRadius;
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                if (voiceActive) {
+                    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+                    gradient.addColorStop(0, 'rgba(0, 255, 255, 0.8)');
+                    gradient.addColorStop(0.5, 'rgba(102, 126, 234, 0.4)');
+                    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = 'rgba(0, 255, 255, 0.9)';
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, baseRadius * 0.5, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, baseRadius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                animationId = requestAnimationFrame(draw);
+            }
+
+            draw();
+        }
+
+        // Toggle chat panel
+        function toggleChatPanel() {
+            const panel = document.getElementById('chat-panel');
+            panel.classList.toggle('collapsed');
+        }
+
+        // Add chat message
+        function addChatMessage(text, type = 'assistant', component = null) {
+            const chatStream = document.querySelectorAll('#chat-stream')[0]; // Get the one in chat panel
+            const msgDiv = document.createElement('div');
+            msgDiv.className = type === 'user' ? 'text-right' : 'text-left';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = `inline-block max-w-[90%] p-2.5 rounded-2xl ${
+                type === 'user' ? 'bg-cyan-500/20 border border-cyan-500/30' : 'glass'
+            }`;
+            
+            const textP = document.createElement('p');
+            textP.className = 'text-white text-xs';
+            textP.textContent = text;
+            contentDiv.appendChild(textP);
+            
+            if (component) {
+                contentDiv.appendChild(component);
+            }
+            
+            msgDiv.appendChild(contentDiv);
+            chatStream.appendChild(msgDiv);
+            chatStream.scrollTop = chatStream.scrollHeight;
+        }
+
+        // Submit memory
+        async function submitMemory() {
+            const input = document.getElementById('text-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            addChatMessage(text, 'user');
+            
+            try {
+                const response = await fetch(`${API_BASE}/infer`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: text,
+                        user_id: USER_ID
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    addChatMessage('Memory saved successfully. Graph updated.', 'assistant');
+                    await loadGraph();
+                }
+            } catch (err) {
+                addChatMessage('Failed to save memory.', 'assistant');
                 console.error(err);
+            }
+
+            input.value = '';
+        }
+
+        // Toggle voice
+        function toggleVoice() {
+            voiceActive = !voiceActive;
+            const btn = document.getElementById('voice-btn');
+            
+            if (voiceActive) {
+                btn.className = 'w-full mt-4 py-3 rounded-full font-semibold transition-all bg-cyan-500/20 border-2 border-cyan-500 text-cyan-400';
+                btn.textContent = '🎙️ Voice Active';
+                addChatMessage('Voice agent connected.', 'assistant');
+            } else {
+                btn.className = 'w-full mt-4 py-3 rounded-full font-semibold transition-all bg-white/10 border-2 border-white/20 text-white hover:bg-white/20';
+                btn.textContent = '🎤 Start Voice';
+            }
+        }
+
+        // Sleep cycle
+        function triggerSleepCycle() {
+            sleepMode = !sleepMode;
+            const btn = document.getElementById('sleep-btn');
+            const body = document.body;
+            
+            if (sleepMode) {
+                btn.textContent = '💤 Consolidating...';
+                btn.className = 'w-full py-4 mb-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-2xl transition-all shadow-lg animate-pulse';
+                body.style.background = 'linear-gradient(135deg, #1e1b4b 0%, #581c87 50%, #000000 100%)';
+                document.getElementById('theme-icon').textContent = '☀️';
+                addChatMessage('Initiating memory consolidation. Entering sleep state...', 'assistant');
+                
+                // Simulate progress
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 10;
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        sleepMode = false;
+                        btn.textContent = '🌙 Trigger Sleep Cycle';
+                        btn.className = 'w-full py-4 mb-6 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-2xl transition-all shadow-lg hover:shadow-purple-500/50';
+                        body.style.background = '';
+                        document.getElementById('theme-icon').textContent = '🌙';
+                        addChatMessage('Memory consolidation complete. 12 new insights generated.', 'assistant');
+                    }
+                }, 500);
             }
         }
 
         // Voice recording
         async function toggleRecording() {
-            const btn = document.getElementById('recordBtn');
-
-            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+            const btn = document.getElementById('record-btn');
+            const indicator = document.getElementById('recording-indicator');
+            
+            if (!isRecording) {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     mediaRecorder = new MediaRecorder(stream);
@@ -407,26 +1105,29 @@
                     mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
                     mediaRecorder.onstop = async () => {
                         const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                        await uploadVoice(audioBlob);
+                        await uploadVoiceRecording(audioBlob);
                         stream.getTracks().forEach(track => track.stop());
                     };
 
                     mediaRecorder.start();
-                    btn.classList.add('recording');
-                    btn.textContent = '⏹️ Stop';
-                    showStatus('Recording...');
+                    isRecording = true;
+                    btn.classList.add('active');
+                    indicator.classList.remove('hidden');
+                    addChatMessage('Recording voice...', 'assistant');
                 } catch (err) {
-                    showStatus('Microphone error', 3000);
+                    console.error('Microphone access denied:', err);
+                    addChatMessage('Microphone access denied. Please enable permissions.', 'assistant');
                 }
             } else {
                 mediaRecorder.stop();
-                btn.classList.remove('recording');
-                btn.textContent = '🎙️ Record';
-                showStatus('Processing...');
+                isRecording = false;
+                btn.classList.remove('active');
+                indicator.classList.add('hidden');
             }
         }
 
-        async function uploadVoice(audioBlob) {
+        // Upload voice recording
+        async function uploadVoiceRecording(audioBlob) {
             try {
                 const formData = new FormData();
                 formData.append('audio', audioBlob, 'recording.wav');
@@ -441,66 +1142,224 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    showStatus('✅ Voice saved!', 2000);
-                    setTimeout(loadGraph, 1000);
+                    addChatMessage('Voice recording saved successfully.', 'assistant');
+                    await loadGraph();
                 } else {
-                    showStatus('❌ Upload failed', 3000);
+                    addChatMessage('Failed to save voice recording.', 'assistant');
                 }
             } catch (err) {
-                showStatus('❌ Network error', 3000);
+                console.error('Upload failed:', err);
+                addChatMessage('Failed to upload voice recording.', 'assistant');
             }
         }
 
-        async function submitText() {
-            const text = document.getElementById('textInput').value.trim();
-            if (!text) {
-                alert('Please enter some text');
+        // Attachment handler
+        function handleAttachment() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*,.pdf,.txt,.doc,.docx';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    addChatMessage(`Attached: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`, 'user');
+                    // TODO: Implement file upload to backend
+                    addChatMessage('File attachment feature coming soon!', 'assistant');
+                }
+            };
+            input.click();
+        }
+
+        // Toggle keyboard shortcuts
+        function toggleShortcuts() {
+            const overlay = document.getElementById('shortcuts-overlay');
+            overlay.classList.toggle('hidden');
+        }
+
+        // Search functionality
+        function handleGlobalSearch(query) {
+            if (!query) return;
+            loadGraph(query);
+            addChatMessage(`Searching for: "${query}"`, 'assistant');
+        }
+
+        // Theme toggle
+        function toggleTheme() {
+            sleepMode = !sleepMode;
+            const body = document.body;
+            const icon = document.getElementById('theme-icon');
+            
+            if (sleepMode) {
+                body.style.background = 'linear-gradient(135deg, #1e1b4b 0%, #581c87 50%, #000000 100%)';
+                icon.textContent = '☀️';
+            } else {
+                body.style.background = '';
+                icon.textContent = '🌙';
+            }
+        }
+
+        // Context menu functionality
+        let selectedNode = null;
+
+        function showContextMenu(node, event) {
+            event.preventDefault();
+            selectedNode = node;
+            const menu = document.getElementById('context-menu');
+            menu.style.display = 'block';
+            menu.style.left = `${event.clientX}px`;
+            menu.style.top = `${event.clientY}px`;
+        }
+
+        function hideContextMenu() {
+            document.getElementById('context-menu').style.display = 'none';
+            selectedNode = null;
+        }
+
+        async function deleteMemory() {
+            if (!selectedNode || !selectedNode.memory_id) return;
+            
+            const confirmed = confirm(`Delete memory: "${selectedNode.label}"?\n\nThis action cannot be undone.`);
+            if (!confirmed) {
+                hideContextMenu();
                 return;
             }
 
-            showStatus('Saving text...');
-
             try {
-                const response = await fetch(`${API_BASE}/infer`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify({
-                        content: text,
-                        user_id: USER_ID
-                    })
+                const response = await fetch(`${API_BASE}/api/memory/${selectedNode.memory_id}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
                 });
 
-                const result = await response.json();
-                
-                if (result.success) {
-                    document.getElementById('textInput').value = '';
-                    showStatus('✅ Saved to memory!', 2000);
-                    setTimeout(loadGraph, 1000);
+                if (response.ok) {
+                    addChatMessage(`✓ Deleted memory: ${selectedNode.label}`, 'assistant');
+                    hideContextMenu();
+                    // Reload graph
+                    setTimeout(() => loadGraph(), 500);
                 } else {
-                    showStatus('❌ Error: ' + (result.error || 'Unknown'), 3000);
-                    console.error('API error:', result);
+                    const error = await response.json();
+                    addChatMessage(`✗ Failed to delete: ${error.error || 'Unknown error'}`, 'assistant');
                 }
             } catch (err) {
-                showStatus('❌ Network error', 3000);
-                console.error('Submit error:', err);
+                console.error('Delete failed:', err);
+                addChatMessage('✗ Delete operation failed', 'assistant');
             }
         }
 
-        function showStatus(message, duration = 0) {
-            const status = document.getElementById('status');
-            status.textContent = message;
-            status.classList.add('show');
+        async function pinMemory() {
+            if (!selectedNode || !selectedNode.memory_id) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/memory/${selectedNode.memory_id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pinned: true })
+                });
 
-            if (duration > 0) {
-                setTimeout(() => {
-                    status.classList.remove('show');
-                }, duration);
+                if (response.ok) {
+                    addChatMessage(`📌 Pinned: ${selectedNode.label}`, 'assistant');
+                    hideContextMenu();
+                    setTimeout(() => loadGraph(), 500);
+                } else {
+                    addChatMessage('✗ Failed to pin memory', 'assistant');
+                }
+            } catch (err) {
+                console.error('Pin failed:', err);
+                addChatMessage('✗ Pin operation failed', 'assistant');
             }
         }
+
+        async function markSensitive() {
+            if (!selectedNode || !selectedNode.memory_id) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/memory/${selectedNode.memory_id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sensitive: true })
+                });
+
+                if (response.ok) {
+                    addChatMessage(`🔒 Marked sensitive: ${selectedNode.label}`, 'assistant');
+                    hideContextMenu();
+                    setTimeout(() => loadGraph(), 500);
+                } else {
+                    addChatMessage('✗ Failed to mark sensitive', 'assistant');
+                }
+            } catch (err) {
+                console.error('Mark sensitive failed:', err);
+                addChatMessage('✗ Operation failed', 'assistant');
+            }
+        }
+
+        // Event listeners
+        document.getElementById('voice-btn').addEventListener('click', toggleVoice);
+        document.getElementById('sleep-btn').addEventListener('click', triggerSleepCycle);
+        document.getElementById('submit-btn').addEventListener('click', submitMemory);
+        document.getElementById('record-btn').addEventListener('click', toggleRecording);
+        document.getElementById('attach-btn').addEventListener('click', handleAttachment);
+        document.getElementById('help-btn').addEventListener('click', toggleShortcuts);
+        document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+        
+        document.getElementById('text-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') submitMemory();
+        });
+
+        document.getElementById('global-search').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleGlobalSearch(e.target.value);
+                e.target.value = '';
+            }
+        });
+
+        // Hide context menu when clicking elsewhere
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.context-menu')) {
+                hideContextMenu();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Shift+? to toggle shortcuts
+            if (e.shiftKey && e.key === '?') {
+                e.preventDefault();
+                toggleShortcuts();
+            }
+            // Escape to close overlays
+            if (e.key === 'Escape') {
+                document.getElementById('shortcuts-overlay').classList.add('hidden');
+            }
+            // Space to toggle voice (when not in input)
+            if (e.key === ' ' && e.target.tagName !== 'INPUT') {
+                e.preventDefault();
+                toggleVoice();
+            }
+            // Ctrl+S for sleep cycle
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                triggerSleepCycle();
+            }
+            // Ctrl+F for search focus
+            if (e.ctrlKey && e.key === 'f') {
+                e.preventDefault();
+                document.getElementById('global-search').focus();
+            }
+            // Ctrl+T for theme toggle
+            if (e.ctrlKey && e.key === 't') {
+                e.preventDefault();
+                toggleTheme();
+            }
+            // Ctrl+R to reset camera
+            if (e.ctrlKey && e.key === 'r') {
+                e.preventDefault();
+                Graph.cameraPosition({ x: 0, y: 200, z: 400 }, { x: 0, y: 0, z: 0 }, 1000);
+                addChatMessage('Camera reset to default position.', 'assistant');
+            }
+        });
 
         // Initialize
         initGraph();
-        setTimeout(loadGraph, 500);
+        initAudioVisualizer();
+        loadGraph();
     </script>
 </body>
 </html>
