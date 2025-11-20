@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HANSEI - 3D Memory Graph</title>
+    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/@react-three/drei@9.88.17/core/index.js"></script>
+    <script src="https://unpkg.com/3d-force-graph@1.73.2/dist/3d-force-graph.min.js"></script>
+    <script src="https://unpkg.com/troika-three-text@0.47.2/dist/troika-three-text.umd.min.js"></script>
+    <!-- ElevenLabs Voice Agent SDK -->
+    <script src="https://unpkg.com/@elevenlabs/client@latest/dist/index.umd.js"></script>
+    <script src="voice-agent.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1a2e 50%, #16213e 100%);
+            color: white;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 20%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+                       radial-gradient(circle at 80% 80%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
+                       radial-gradient(circle at 40% 40%, rgba(120, 198, 198, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        #header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(25px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 0 0 20px 20px;
+            padding: 20px;
+            z-index: 1000;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 2em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+            min-width: 300px;
+        }
+
+        input, button, textarea {
+            padding: 12px 20px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            background: rgba(102, 126, 234, 0.1);
+            color: white;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            background: rgba(102, 126, 234, 0.2);
+            border-color: #764ba2;
+        }
+
+        button {
+            cursor: pointer;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            font-weight: bold;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .record-btn {
+            padding: 12px 24px;
+            border-radius: 50px;
+        }
+
+        .record-btn.recording {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            animation: pulse 1.5s infinite;
+        }
+
+        .voice-agent-btn {
+            padding: 12px 24px;
+            border-radius: 50px;
+        }
+
+        .voice-agent-btn.active {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        #graph-container {
+            position: fixed;
+            top: 140px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        #info-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(25px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 25px;
+            border-radius: 20px;
+            max-width: 350px;
+            z-index: 999;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #info-panel:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
+        }
+
+        .stat {
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .legend {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        .status {
+            position: fixed;
+            top: 150px;
+            right: 20px;
+            padding: 15px 25px;
+            background: rgba(102, 126, 234, 0.2);
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            z-index: 999;
+            display: none;
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        .text-input-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(10, 14, 39, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #667eea;
+            max-width: 400px;
+            z-index: 999;
+        }
+
+        .text-input-container textarea {
+            width: 100%;
+            min-height: 80px;
+            resize: vertical;
+            margin-bottom: 10px;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            #header {
+                padding: 15px 10px;
+            }
+            
+            h1 {
+                font-size: 1.5em;
+                margin-bottom: 15px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .input-group {
+                min-width: auto;
+                flex-direction: column;
+            }
+            
+            input, button, textarea {
+                padding: 10px 15px;
+                font-size: 0.9em;
+            }
+            
+            #info-panel {
+                left: 10px;
+                right: 10px;
+                bottom: 10px;
+                max-width: none;
+                padding: 15px;
+            }
+            
+            .text-input-container {
+                left: 10px;
+                right: 10px;
+                bottom: 10px;
+                max-width: none;
+                padding: 15px;
+            }
+            
+            .status {
+                top: auto;
+                bottom: 120px;
+                right: 10px;
+                left: 10px;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.3em;
+            }
+            
+            input, button, textarea {
+                padding: 8px 12px;
+                font-size: 0.85em;
+            }
+            
+            #info-panel, .text-input-container {
+                padding: 12px;
+            }
+        }
+
+        /* Loading and Toast Notifications */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #333;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        .loading-overlay p {
+            color: white;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .error-toast, .success-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            max-width: 400px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            z-index: 9000;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .error-toast {
+            background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+        }
+
+        .success-toast {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        }
+
+        .error-toast button, .success-toast button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2em;
+            cursor: pointer;
+            margin-left: 10px;
+            padding: 0 5px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Accessibility Improvements */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Focus indicators */
+        button:focus, input:focus, textarea:focus {
+            outline: 3px solid #667eea;
+            outline-offset: 2px;
+        }
+
+        /* Reduced motion for accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>Loading 3D visualization...</p>
+    </div>
+
+    <!-- Error Toast -->
+    <div id="errorToast" class="error-toast" style="display: none;">
+        <span id="errorMessage"></span>
+        <button id="closeError" aria-label="Close error message">✕</button>
+    </div>
+
+    <!-- Success Toast -->
+    <div id="successToast" class="success-toast" style="display: none;">
+        <span id="successMessage"></span>
+        <button id="closeSuccess" aria-label="Close success message">✕</button>
+    </div>
+
+    <div id="header" role="banner">
+        <h1 id="mainTitle">⏺ HANSEI - 3D Memory Graph</h1>
+        <div class="controls" role="region" aria-label="Search and input controls">
+            <div class="input-group" role="search">
+                <label for="searchInput" class="sr-only">Search memories</label>
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="Search memories..." 
+                    value="all"
+                    aria-label="Search memories"
+                >
+                <button onclick="loadGraph()" aria-describedby="graph-container">
+                    <span aria-hidden="true">🔍</span> Search
+                </button>
+            </div>
+            <div class="input-group" aria-label="Add new memory">
+                <label for="textInput" class="sr-only">What's on your mind</label>
+                <input 
+                    type="text" 
+                    id="textInput" 
+                    placeholder="What's on your mind..."
+                    aria-label="What's on your mind"
+                >
+                <button onclick="submitText()">
+                    <span aria-hidden="true">💾</span> Save
+                </button>
+            </div>
+            <button class="record-btn" id="recordBtn" onclick="toggleRecording()" aria-label="Start voice recording">
+                <span aria-hidden="true">🎙️</span> Record
+            </button>
+            <button class="voice-agent-btn" id="voiceAgentBtn" onclick="toggleVoiceAgent()" aria-label="Toggle AI voice agent">
+                <span aria-hidden="true">🤖</span> Voice Agent
+            </button>
+        </div>
+    </div>
+
+    <div id="graph-container"></div>
+
+    <div id="info-panel">
+        <h3>Graph Stats</h3>
+        <div class="stat">
+            <span>Nodes:</span>
+            <span class="stat-value" id="nodeCount">0</span>
+        </div>
+        <div class="stat">
+            <span>Connections:</span>
+            <span class="stat-value" id="edgeCount">0</span>
+        </div>
+        <div class="stat">
+            <span>Memories:</span>
+            <span class="stat-value" id="memoryCount">0</span>
+        </div>
+        <div class="legend">
+            <strong>Node Types:</strong>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #667eea;"></div>
+                <span>Goals</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #f093fb;"></div>
+                <span>Habits</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #43e97b;"></div>
+                <span>Projects</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ffd89b;"></div>
+                <span>Objects</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <script>
+        const API_BASE = 'https://svc-01kaaeej1ecf9k85z0f29rp6wf.01ka41m1warcc7s5zveqw1tt3z.lmapp.run';
+        const USER_ID = 'demo_user_' + Date.now();
+        // ElevenLabs configuration - Replace with your actual credentials
+        const ELEVENLABS_API_KEY = 'your_elevenlabs_api_key_here';
+        const ELEVENLABS_AGENT_ID = 'your_agent_id_here';
+
+        let Graph;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let voiceAgent = null;
+
+        // Initialize Advanced 3D Graph with Glassmorphism
+        function initGraph() {
+            const container = document.getElementById('graph-container');
+            
+            Graph = ForceGraph3D()(container)
+                .backgroundColor('rgba(10, 14, 39, 0)')
+                .showNavInfo(false)
+                .nodeLabel(node => `
+                    <div style="
+                        background: rgba(255, 255, 255, 0.1);
+                        backdrop-filter: blur(10px);
+                        border: 1px solid rgba(255, 255, 255, 0.2);
+                        border-radius: 8px;
+                        padding: 8px 12px;
+                        color: white;
+                        font-size: 12px;
+                        white-space: nowrap;
+                        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+                    ">
+                        <strong>${node.label}</strong><br>
+                        ${node.type} • Level ${node.level}
+                    </div>
+                `)
+                .nodeThreeObject(node => createGlassmorphNode(node))
+                .nodeVal(node => {
+                    // Central node should be largest
+                    if (node.id === 'central') return 35;
+                    if (node.level === 1) return 25;
+                    return Math.max(node.weight * 15, 8);
+                })
+                .linkThreeObject(link => createGlassmorphLink(link))
+                .linkPositionUpdate((obj, { start, end }) => {
+                    Object.assign(obj.position, start);
+                    obj.lookAt(end.x, end.y, end.z);
+                    obj.scale.z = start.distanceTo(end);
+                })
+                .onNodeClick(node => {
+                    showStatus(`${node.type}: ${node.label}`);
+                    // Animate camera to focus on clicked node
+                    const distance = 100;
+                    const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+                    Graph.cameraPosition(
+                        { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio },
+                        node,
+                        1000
+                    );
+                })
+                .onNodeHover(node => {
+                    container.style.cursor = node ? 'pointer' : null;
+                    if (node && node.__threeObj) {
+                        // Hover effect: slight glow
+                        node.__threeObj.material.emissiveIntensity = 0.3;
+                    }
+                })
+                .onNodeDragEnd(node => {
+                    node.fx = node.x;
+                    node.fy = node.y;
+                    node.fz = node.z;
+                });
+
+            // Enhanced camera settings for cinematic view
+            Graph.cameraPosition({ x: 0, y: 200, z: 400 });
+            Graph.controls().enableDamping = true;
+            Graph.controls().dampingFactor = 0.05;
+
+            // Enhanced lighting for better visualization
+            const scene = Graph.scene();
+            
+            // Remove default lights
+            scene.children.filter(child => child.isLight).forEach(light => scene.remove(light));
+            
+            // Enhanced ambient light for overall illumination
+            const ambientLight = new THREE.AmbientLight(0x404040, 2.5);
+            scene.add(ambientLight);
+
+            // Directional light for depth and shadows
+            const dirLight1 = new THREE.DirectionalLight(0xffffff, 1.5);
+            dirLight1.position.set(100, 100, 100);
+            scene.add(dirLight1);
+
+            const dirLight2 = new THREE.DirectionalLight(0x667eea, 0.8);
+            dirLight2.position.set(-100, 50, -100);
+            scene.add(dirLight2);
+
+            // Point light at center for central node glow
+            const centerLight = new THREE.PointLight('#667eea', 3, 500);
+            centerLight.position.set(0, 0, 0);
+            scene.add(centerLight);
+
+            // Hemisphere light for ambient fill
+            const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
+            hemiLight.position.set(0, 200, 0);
+            scene.add(hemiLight);
+
+            // Accent lights for visual depth
+            const accentLight1 = new THREE.PointLight('#f093fb', 2, 300);
+            accentLight1.position.set(200, 100, 200);
+            scene.add(accentLight1);
+
+            const accentLight2 = new THREE.PointLight('#43e97b', 2, 300);
+            accentLight2.position.set(-200, -100, -200);
+            scene.add(accentLight2);
+        }
+
+        // Create glassmorphism memory nodes
+        function createGlassmorphNode(node) {
+            const nodeSize = Graph.nodeVal()(node);
+            const geometry = new THREE.IcosahedronGeometry(nodeSize, 2);
+            
+            // Glassmorphism material
+            const material = new THREE.MeshPhysicalMaterial({
+                color: new THREE.Color(getNodeColor(node.type)),
+                transparent: true,
+                opacity: 0.1,
+                roughness: 0.1,
+                metalness: 0.1,
+                transmission: 0.9,
+                thickness: 0.5,
+                envMapIntensity: 1.5,
+                clearcoat: 1.0,
+                clearcoatRoughness: 0.1,
+                reflectivity: 0.8,
+                ior: 1.5,
+            });
+
+            const mesh = new THREE.Mesh(geometry, material);
+            
+            // Add rim light effect
+            const rimGeometry = new THREE.IcosahedronGeometry(nodeSize * 1.05, 1);
+            const rimMaterial = new THREE.MeshBasicMaterial({
+                color: getNodeColor(node.type),
+                transparent: true,
+                opacity: 0.3,
+                side: THREE.BackSide,
+            });
+            const rim = new THREE.Mesh(rimGeometry, rimMaterial);
+            
+            // Create node group
+            const group = new THREE.Group();
+            group.add(mesh);
+            group.add(rim);
+
+            // Add text label using troika-three-text
+            if (window.troikaThreeText) {
+                const textMesh = new window.troikaThreeText.Text();
+                textMesh.text = node.label;
+                textMesh.fontSize = nodeSize * 0.3;
+                textMesh.color = '#ffffff';
+                textMesh.anchorX = 'center';
+                textMesh.anchorY = 'middle';
+                textMesh.position.set(0, nodeSize + 15, 0);
+                textMesh.material.transparent = true;
+                textMesh.material.opacity = 0.9;
+                group.add(textMesh);
+                textMesh.sync();
+            }
+            
+            // Store reference for hover effects
+            node.__threeObj = mesh;
+            
+            return group;
+        }
+
+        // Create glassmorphism links
+        function createGlassmorphLink(link) {
+            const geometry = new THREE.CylinderGeometry(0.5, 0.5, 1, 8);
+            const material = new THREE.MeshPhysicalMaterial({
+                color: 0x667eea,
+                transparent: true,
+                opacity: 0.15,
+                roughness: 0.1,
+                metalness: 0.1,
+                transmission: 0.8,
+                thickness: 0.1,
+            });
+            
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.rotation.x = Math.PI / 2;
+            
+            return mesh;
+        }
+
+        // ADVANCED ORBITAL PHYSICS: Solar System Model with Gravitational Forces
+        function applyOrbitalPhysics() {
+            const graphData = Graph.graphData();
+            const ORBITAL_CONFIG = {
+                0: { radius: 0, speed: 0, inclination: 0 },           // Central "You" node
+                1: { radius: 200, speed: 0.001, inclination: 0.1 },   // Domain nodes (inner orbit)
+                2: { radius: 380, speed: 0.0005, inclination: 0.2 }   // Entity nodes (outer orbit)
+            };
+
+            // Enhanced orbital mechanics with physics simulation
+            Graph.d3Force('orbital-gravity', alpha => {
+                const time = Date.now() * 0.001;
+                
+                graphData.nodes.forEach((node, index) => {
+                    if (node.level !== undefined) {
+                        const config = ORBITAL_CONFIG[node.level] || ORBITAL_CONFIG[2];
+                        
+                        if (node.id === 'central') {
+                            // Central node stays at origin (gravitational center)
+                            node.fx = 0;
+                            node.fy = 0;
+                            node.fz = 0;
+                        } else {
+                            // Calculate orbital position with slight randomization
+                            const angleOffset = (index * 2.4) + (time * config.speed);
+                            const verticalOffset = Math.sin(time * config.speed * 2) * config.inclination * 20;
+                            
+                            const targetX = Math.cos(angleOffset) * config.radius;
+                            const targetY = verticalOffset;
+                            const targetZ = Math.sin(angleOffset) * config.radius;
+                            
+                            // Gravitational pull toward orbital shell
+                            const dx = node.x || 0;
+                            const dy = node.y || 0;
+                            const dz = node.z || 0;
+                            
+                            const currentRadius = Math.sqrt(dx * dx + dy * dy + dz * dz);
+                            const targetRadius = config.radius;
+                            
+                            if (currentRadius > 0) {
+                                // Radial force (gravity/centrifugal balance)
+                                const radiusError = currentRadius - targetRadius;
+                                const radialForce = -radiusError * alpha * 0.3;
+                                
+                                node.vx += (dx / currentRadius) * radialForce;
+                                node.vy += (dy / currentRadius) * radialForce;
+                                node.vz += (dz / currentRadius) * radialForce;
+                                
+                                // Tangential force (orbital motion)
+                                const tangentialForce = alpha * 0.05;
+                                node.vx += (targetX - dx) * tangentialForce;
+                                node.vy += (targetY - dy) * tangentialForce * 0.1;
+                                node.vz += (targetZ - dz) * tangentialForce;
+                            }
+                            
+                            // Add gentle rotation animation to nodes
+                            if (node.__threeObj && node.__threeObj.parent) {
+                                node.__threeObj.parent.rotation.y = time * 0.2;
+                                node.__threeObj.parent.rotation.x = Math.sin(time * 0.1) * 0.1;
+                            }
+                        }
+                    }
+                });
+            });
+
+            // Add inter-orbital gravitational attractions
+            Graph.d3Force('inter-gravity', alpha => {
+                graphData.nodes.forEach(nodeA => {
+                    if (nodeA.id === 'central') return;
+                    
+                    graphData.nodes.forEach(nodeB => {
+                        if (nodeA === nodeB || nodeB.id === 'central') return;
+                        
+                        const dx = (nodeB.x || 0) - (nodeA.x || 0);
+                        const dy = (nodeB.y || 0) - (nodeA.y || 0);
+                        const dz = (nodeB.z || 0) - (nodeA.z || 0);
+                        const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+                        
+                        if (distance > 0 && distance < 100) {
+                            // Weak attractive force between related nodes
+                            const force = alpha * 0.01 / (distance * distance);
+                            nodeA.vx += dx * force;
+                            nodeA.vy += dy * force;
+                            nodeA.vz += dz * force;
+                        }
+                    });
+                });
+            });
+
+            // Apply damping for stability
+            Graph.d3Force('damping', alpha => {
+                const damping = 0.95;
+                graphData.nodes.forEach(node => {
+                    if (node.id !== 'central') {
+                        node.vx *= damping;
+                        node.vy *= damping;
+                        node.vz *= damping;
+                    }
+                });
+            });
+
+            // Restart simulation with enhanced forces
+            Graph.d3ReheatSimulation();
+            
+            // Add ambient lighting and environment
+            addAmbientEnvironment();
+        }
+
+        // Create immersive spatial environment
+        function addAmbientEnvironment() {
+            const scene = Graph.scene();
+            
+            // Add ambient lighting for glassmorphism
+            const ambientLight = new THREE.AmbientLight(0x404080, 0.3);
+            scene.add(ambientLight);
+            
+            // Add directional light for depth
+            const directionalLight = new THREE.DirectionalLight(0x667eea, 0.5);
+            directionalLight.position.set(200, 200, 100);
+            scene.add(directionalLight);
+            
+            // Add point lights for magical atmosphere
+            const colors = [0x667eea, 0xf093fb, 0x43e97b];
+            for (let i = 0; i < 3; i++) {
+                const light = new THREE.PointLight(colors[i], 0.3, 500);
+                light.position.set(
+                    (Math.random() - 0.5) * 800,
+                    (Math.random() - 0.5) * 400,
+                    (Math.random() - 0.5) * 800
+                );
+                scene.add(light);
+            }
+            
+            // Add subtle particle system for depth
+            createParticleSystem(scene);
+        }
+
+        // Create ambient particle system
+        function createParticleSystem(scene) {
+            const particleCount = 100;
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            
+            for (let i = 0; i < particleCount * 3; i += 3) {
+                positions[i] = (Math.random() - 0.5) * 1000;
+                positions[i + 1] = (Math.random() - 0.5) * 500;
+                positions[i + 2] = (Math.random() - 0.5) * 1000;
+            }
+            
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            
+            const material = new THREE.PointsMaterial({
+                color: 0x667eea,
+                size: 2,
+                transparent: true,
+                opacity: 0.3,
+                blending: THREE.AdditiveBlending,
+            });
+            
+            const particles = new THREE.Points(geometry, material);
+            scene.add(particles);
+            
+            // Animate particles
+            function animateParticles() {
+                particles.rotation.y += 0.001;
+                particles.rotation.x += 0.0005;
+                requestAnimationFrame(animateParticles);
+            }
+            animateParticles();
+        }
+
+        // Color mapping
+        function getNodeColor(type) {
+            const colors = {
+                'goal': '#667eea',
+                'habit': '#f093fb',
+                'person': '#4facfe',
+                'project': '#43e97b',
+                'emotion': '#fa709a',
+                'object': '#ffd89b'
+            };
+            return colors[type] || '#999';
+        }
+
+        // Build hierarchical structure
+        function buildHierarchy(flatData) {
+            const nodes = [];
+            const links = [];
+
+            // Add central "You" node
+            nodes.push({
+                id: 'central',
+                label: 'You',
+                type: 'person',
+                weight: 1,
+                level: 0
+            });
+
+            // Group entities by type (domains)
+            const domains = {};
+            flatData.nodes.forEach(node => {
+                if (!domains[node.type]) {
+                    domains[node.type] = [];
+                }
+                domains[node.type].push(node);
+            });
+
+            // Create domain nodes (layer 1)
+            Object.keys(domains).forEach(domainType => {
+                const domainId = `domain-${domainType}`;
+                nodes.push({
+                    id: domainId,
+                    label: domainType.toUpperCase(),
+                    type: domainType,
+                    weight: 0.8,
+                    level: 1
+                });
+
+                // NARRATIVE FIX: Reverse link direction (domain → central)
+                // Particles flow from periphery toward center
+                links.push({
+                    source: domainId,
+                    target: 'central'
+                });
+
+                // Add entity nodes (layer 2+)
+                domains[domainType].forEach((entity, idx) => {
+                    const entityId = `${domainType}-${idx}`;
+                    nodes.push({
+                        id: entityId,
+                        label: entity.label,
+                        type: entity.type,
+                        weight: entity.weight,
+                        level: 2
+                    });
+
+                    // NARRATIVE FIX: Reverse link direction (entity → domain)
+                    // Data flows inward: raw data becomes wisdom
+                    links.push({
+                        source: entityId,
+                        target: domainId
+                    });
+                });
+            });
+
+            // Add relationship edges (cross-links)
+            flatData.edges.forEach((edge, idx) => {
+                // Find matching nodes
+                const sourceNode = nodes.find(n => n.label === edge.source);
+                const targetNode = nodes.find(n => n.label === edge.target);
+
+                if (sourceNode && targetNode) {
+                    links.push({
+                        source: sourceNode.id,
+                        target: targetNode.id,
+                        type: edge.type
+                    });
+                }
+            });
+
+            return { nodes, links };
+        }
+
+        // Load and visualize graph
+        async function loadGraph() {
+            const query = document.getElementById('searchInput').value || 'all';
+            showStatus('Loading graph...');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/graph?query=${encodeURIComponent(query)}&limit=50&user_id=${USER_ID}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const hierarchical = buildHierarchy(result.graph);
+                    
+                    Graph.graphData(hierarchical);
+
+                    // Apply orbital physics after data load
+                    setTimeout(() => {
+                        applyOrbitalPhysics();
+                    }, 100);
+
+                    // Update stats
+                    document.getElementById('nodeCount').textContent = hierarchical.nodes.length;
+                    document.getElementById('edgeCount').textContent = hierarchical.links.length;
+                    document.getElementById('memoryCount').textContent = result.rawResults.length;
+
+                    showStatus('Graph loaded!', 2000);
+                } else {
+                    showStatus('Error loading graph', 3000);
+                }
+            } catch (err) {
+                showStatus('Network error', 3000);
+                console.error(err);
+            }
+        }
+
+        // Voice recording
+        async function toggleRecording() {
+            const btn = document.getElementById('recordBtn');
+
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        await uploadVoice(audioBlob);
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+
+                    mediaRecorder.start();
+                    btn.classList.add('recording');
+                    btn.textContent = '⏹️ Stop';
+                    showStatus('Recording...');
+                } catch (err) {
+                    showStatus('Microphone error', 3000);
+                }
+            } else {
+                mediaRecorder.stop();
+                btn.classList.remove('recording');
+                btn.textContent = '🎙️ Record';
+                showStatus('Processing...');
+            }
+        }
+
+        async function toggleVoiceAgent() {
+            const btn = document.getElementById('voiceAgentBtn');
+            
+            if (!voiceAgent) {
+                // Initialize voice agent
+                voiceAgent = new VoiceAgent(ELEVENLABS_API_KEY);
+            }
+
+            if (voiceAgent.isActive) {
+                // Stop voice agent
+                await voiceAgent.stop();
+                btn.classList.remove('active');
+                btn.innerHTML = '<span aria-hidden="true">🤖</span> Voice Agent';
+                showStatus('Voice agent stopped');
+            } else {
+                // Start voice agent
+                showStatus('Starting voice agent...');
+                const success = await voiceAgent.startConversation(ELEVENLABS_AGENT_ID);
+                
+                if (success) {
+                    btn.classList.add('active');
+                    btn.innerHTML = '<span aria-hidden="true">🟢</span> Voice Agent Active';
+                    showStatus('🎤 Voice agent ready! Try: "rotate camera left" or "search for goals"', 5000);
+                } else {
+                    showStatus('❌ Failed to start voice agent. Check console for details.', 5000);
+                }
+            }
+        }
+
+        async function uploadVoice(audioBlob) {
+            try {
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'recording.wav');
+                formData.append('audio_format', 'wav');
+                formData.append('user_id', USER_ID);
+
+                const response = await fetch(`${API_BASE}/api/voice/ingest`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatus('✅ Voice saved!', 2000);
+                    setTimeout(loadGraph, 1000);
+                } else {
+                    showStatus('❌ Upload failed', 3000);
+                }
+            } catch (err) {
+                showStatus('❌ Network error', 3000);
+            }
+        }
+
+        async function submitText() {
+            const text = document.getElementById('textInput').value.trim();
+            if (!text) {
+                alert('Please enter some text');
+                return;
+            }
+
+            showStatus('Saving text...');
+
+            try {
+                const response = await fetch(`${API_BASE}/infer`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({
+                        content: text,
+                        user_id: USER_ID
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('textInput').value = '';
+                    showStatus('✅ Saved to memory!', 2000);
+                    setTimeout(loadGraph, 1000);
+                } else {
+                    showStatus('❌ Error: ' + (result.error || 'Unknown'), 3000);
+                    console.error('API error:', result);
+                }
+            } catch (err) {
+                showStatus('❌ Network error', 3000);
+                console.error('Submit error:', err);
+            }
+        }
+
+        function showStatus(message, duration = 0) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.classList.add('show');
+
+            if (duration > 0) {
+                setTimeout(() => {
+                    status.classList.remove('show');
+                }, duration);
+            }
+        }
+
+        // Performance optimization and monitoring
+        const performanceMonitor = {
+            frameCount: 0,
+            lastTime: Date.now(),
+            fps: 0,
+            
+            update() {
+                this.frameCount++;
+                const now = Date.now();
+                if (now - this.lastTime >= 1000) {
+                    this.fps = Math.round((this.frameCount * 1000) / (now - this.lastTime));
+                    this.frameCount = 0;
+                    this.lastTime = now;
+                    
+                    // Update FPS display if exists
+                    const fpsElement = document.getElementById('fps-counter');
+                    if (fpsElement) {
+                        fpsElement.textContent = `${this.fps} FPS`;
+                        fpsElement.style.color = this.fps >= 50 ? '#43e97b' : this.fps >= 30 ? '#ffd89b' : '#f5576c';
+                    }
+                }
+            },
+            
+            optimizeForPerformance() {
+                const graphData = Graph.graphData();
+                const nodeCount = graphData.nodes.length;
+                
+                // Adaptive quality based on node count and performance
+                if (this.fps < 30 && nodeCount > 100) {
+                    // Reduce quality for better performance
+                    Graph.nodeThreeObjectExtend(true); // Use instanced rendering
+                    Graph.linkDirectionalParticles(0); // Disable particles
+                    console.log('Performance mode: Reduced quality for better FPS');
+                } else if (this.fps > 55 && nodeCount < 50) {
+                    // Enhance quality for better visuals
+                    Graph.linkDirectionalParticles(4);
+                    console.log('Quality mode: Enhanced visuals');
+                }
+            }
+        };
+
+        // Advanced keyboard and mouse controls
+        function setupAdvancedControls() {
+            let isShiftPressed = false;
+            let isCtrlPressed = false;
+            
+            document.addEventListener('keydown', (event) => {
+                isShiftPressed = event.shiftKey;
+                isCtrlPressed = event.ctrlKey;
+                
+                switch(event.code) {
+                    case 'KeyR':
+                        if (isCtrlPressed) {
+                            event.preventDefault();
+                            // Reset camera to default position
+                            Graph.cameraPosition({ x: 0, y: 200, z: 400 }, { x: 0, y: 0, z: 0 }, 1000);
+                            showStatus('Camera reset', 2000);
+                        }
+                        break;
+                    case 'KeyF':
+                        if (isCtrlPressed) {
+                            event.preventDefault();
+                            // Focus on random node
+                            const nodes = Graph.graphData().nodes;
+                            const randomNode = nodes[Math.floor(Math.random() * nodes.length)];
+                            if (randomNode) {
+                                const distance = 100;
+                                const distRatio = 1 + distance / Math.hypot(randomNode.x, randomNode.y, randomNode.z);
+                                Graph.cameraPosition(
+                                    { x: randomNode.x * distRatio, y: randomNode.y * distRatio, z: randomNode.z * distRatio },
+                                    randomNode,
+                                    1000
+                                );
+                                showStatus(`Focusing on ${randomNode.label}`, 2000);
+                            }
+                        }
+                        break;
+                    case 'KeyP':
+                        if (isCtrlPressed) {
+                            event.preventDefault();
+                            // Toggle physics simulation
+                            const isRunning = Graph.d3Force('center');
+                            if (isRunning) {
+                                Graph.pauseAnimation();
+                                showStatus('Physics paused', 2000);
+                            } else {
+                                Graph.resumeAnimation();
+                                showStatus('Physics resumed', 2000);
+                            }
+                        }
+                        break;
+                    case 'Space':
+                        event.preventDefault();
+                        // Toggle auto-rotate
+                        if (!window.autoRotate) {
+                            window.autoRotate = true;
+                            autoRotateCamera();
+                            showStatus('Auto-rotate enabled', 2000);
+                        } else {
+                            window.autoRotate = false;
+                            showStatus('Auto-rotate disabled', 2000);
+                        }
+                        break;
+                }
+            });
+            
+            document.addEventListener('keyup', (event) => {
+                isShiftPressed = event.shiftKey;
+                isCtrlPressed = event.ctrlKey;
+            });
+        }
+
+        // Auto-rotate camera around the central node
+        function autoRotateCamera() {
+            if (!window.autoRotate) return;
+            
+            const time = Date.now() * 0.001;
+            const radius = 400;
+            const x = Math.cos(time * 0.1) * radius;
+            const y = Math.sin(time * 0.05) * 100 + 200;
+            const z = Math.sin(time * 0.1) * radius;
+            
+            Graph.cameraPosition({ x, y, z }, { x: 0, y: 0, z: 0 });
+            
+            requestAnimationFrame(autoRotateCamera);
+        }
+
+        // Add FPS counter and controls info to UI
+        function addPerformanceUI() {
+            // Add FPS counter to info panel
+            const infoPanel = document.getElementById('info-panel');
+            const fpsHtml = `
+                <div class="stat">
+                    <span>Performance:</span>
+                    <span class="stat-value" id="fps-counter">-- FPS</span>
+                </div>
+            `;
+            infoPanel.innerHTML += fpsHtml;
+            
+            // Add controls info
+            const controlsInfo = `
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2); font-size: 0.8em;">
+                    <strong>Controls:</strong><br>
+                    <div style="margin-top: 8px; line-height: 1.4;">
+                        • <strong>Ctrl+R</strong>: Reset camera<br>
+                        • <strong>Ctrl+F</strong>: Focus random node<br>
+                        • <strong>Ctrl+P</strong>: Toggle physics<br>
+                        • <strong>Space</strong>: Auto-rotate<br>
+                        • <strong>Drag</strong>: Move nodes<br>
+                        • <strong>Scroll</strong>: Zoom
+                    </div>
+                </div>
+            `;
+            infoPanel.innerHTML += controlsInfo;
+        }
+
+        // Voice control integration placeholder
+        function setupVoiceControlIntegration() {
+            // This will be integrated with Agent 2's voice control system
+            window.hanseiVoiceCommands = {
+                'focus central node': () => {
+                    const centralNode = Graph.graphData().nodes.find(n => n.id === 'central');
+                    if (centralNode) {
+                        Graph.cameraPosition(
+                            { x: 0, y: 200, z: 400 },
+                            centralNode,
+                            1000
+                        );
+                        showStatus('Focused on central node', 2000);
+                    }
+                },
+                'show all memories': () => {
+                    Graph.zoomToFit(1000);
+                    showStatus('Showing all memories', 2000);
+                },
+                'start auto rotate': () => {
+                    window.autoRotate = true;
+                    autoRotateCamera();
+                    showStatus('Auto-rotate started', 2000);
+                },
+                'stop auto rotate': () => {
+                    window.autoRotate = false;
+                    showStatus('Auto-rotate stopped', 2000);
+                }
+            };
+        }
+
+        // Initialize the enhanced 3D memory experience
+        function initializeHanseiExperience() {
+            console.log('🚀 Initializing HANSEI Immersive Spatial UI...');
+            
+            // Core initialization
+            initGraph();
+            setupAdvancedControls();
+            addPerformanceUI();
+            setupVoiceControlIntegration();
+            
+            // Start performance monitoring
+            function monitorPerformance() {
+                performanceMonitor.update();
+                performanceMonitor.optimizeForPerformance();
+                requestAnimationFrame(monitorPerformance);
+            }
+            monitorPerformance();
+            
+            // Load initial graph data
+            setTimeout(loadGraph, 500);
+            
+            console.log('✨ HANSEI Experience initialized successfully!');
+        }
+
+        // Initialize everything
+        initializeHanseiExperience();
+    </script>
+</body>
+</html>
