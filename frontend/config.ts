@@ -23,7 +23,7 @@ function getEnvVar(key: string, defaultValue: string = ''): string {
 }
 
 export const config: Config = {
-  apiBase: getEnvVar('VITE_API_BASE', 'https://svc-01ka9tm46dtzqcvz88z5v3c9kc.01ka41m1warcc7s5zveqw1tt3z.lmapp.run'),
+  apiBase: getEnvVar('VITE_API_BASE', 'https://svc-01kabqaz48d5vvdjmxc6pxcr7e.01ka41m1warcc7s5zveqw1tt3z.lmapp.run'),
   humeApiKey: getEnvVar('VITE_HUME_API_KEY', ''),
   userId: getEnvVar('VITE_USER_ID', 'demo_user'),
   isDevelopment: getEnvVar('NODE_ENV', 'production') === 'development'

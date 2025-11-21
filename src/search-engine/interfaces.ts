@@ -1,10 +1,10 @@
 /**
  * Search engine specific interfaces
  */
-import { ComponentRequest, ComponentResponse, Environment, SearchResult, SearchOptions } from '../shared/types.js';
+import { ComponentRequest, ComponentResponse, SearchResult, SearchOptions } from '../shared/types.js';
 
 // Re-export shared types for backward compatibility
-export type { ComponentRequest, ComponentResponse, Environment };
+export type { ComponentRequest, ComponentResponse };
 
 /**
  * Search query interface with enhanced typing

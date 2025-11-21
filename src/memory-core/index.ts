@@ -270,14 +270,31 @@ async function storeInGraphDatabase(database: Env['GRAPH_DATABASE'], memory: Mem
 
 async function retrieveMemories(agentMemory: Env['AGENT_MEMORY'], user_id?: string, limit: number = 10, offset: number = 0): Promise<MemoryEntry[]> {
   try {
-    // In a real implementation, this would paginate through stored memories
-    // For now, return a simple structure
-    const memories: MemoryEntry[] = [];
+    serviceLogger.info('Retrieving memories', { user_id, limit, offset });
     
-    // This is a simplified implementation
-    // In reality, you'd iterate through keys and filter by user_id
+    // Use the getSemanticMemory method to retrieve memories.
+    // A blank query should return recent memories.
+    const result = await agentMemory.getSemanticMemory('', limit);
     
-    return memories;
+    if (!result.success || !result.document) {
+        serviceLogger.warn('No documents found or failed to retrieve from SmartMemory');
+        return [];
+    }
+    
+    let memories = Array.isArray(result.document) ? result.document : [result.document];
+
+    // Filter by user_id on the client side if user_id is provided
+    if (user_id) {
+        memories = memories.filter((m: any) => (m.metadata?.user_id || m.user_id) === user_id);
+    }
+    
+    return memories.slice(offset, offset + limit).map((m: any) => ({
+      id: m.id,
+      content: m.content || m.text,
+      user_id: m.user_id,
+      timestamp: m.timestamp,
+      metadata: m.metadata || {}
+    }));
   } catch (error) {
     serviceLogger.error('Failed to retrieve memories', { error: error instanceof Error ? error.message : String(error) });
     return [];
@@ -286,11 +303,30 @@ async function retrieveMemories(agentMemory: Env['AGENT_MEMORY'], user_id?: stri
 
 async function searchMemories(agentMemory: Env['AGENT_MEMORY'], query: string, user_id?: string, limit: number = 10): Promise<MemoryEntry[]> {
   try {
-    // Simple text search implementation
-    // In reality, this would use vector search or full-text search
-    const results: MemoryEntry[] = [];
+    serviceLogger.info('Searching memories', { query, user_id, limit });
     
-    return results;
+    // Use getSemanticMemory with the query
+    const result = await agentMemory.getSemanticMemory(query, limit);
+
+    if (!result.success || !result.document) {
+        serviceLogger.warn('No documents found or search failed in SmartMemory', { query });
+        return [];
+    }
+
+    let memories = Array.isArray(result.document) ? result.document : [result.document];
+
+    // Filter by user_id on the client side if user_id is provided
+    if (user_id) {
+        memories = memories.filter((m: any) => (m.metadata?.user_id || m.user_id) === user_id);
+    }
+
+    return memories.map((m: any) => ({
+      id: m.id,
+      content: m.content || m.text,
+      user_id: m.user_id,
+      timestamp: m.timestamp,
+      metadata: m.metadata || {}
+    }));
   } catch (error) {
     serviceLogger.error('Failed to search memories', { error: error instanceof Error ? error.message : String(error) });
     return [];

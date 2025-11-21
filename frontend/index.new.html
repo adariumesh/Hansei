@@ -728,12 +728,6 @@
     </style>
 </head>
 <body>
-    <script>
-        const token = localStorage.getItem('hansei_token');
-        if (!token) {
-            window.location.href = '/login.html';
-        }
-    </script>
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay" style="display: none;">
         <div class="loading-spinner"></div>
@@ -964,7 +958,6 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('hansei_token')}`
                     },
                     body: JSON.stringify({
                         message: message,
@@ -1045,11 +1038,7 @@
             showSuccess('Loading orphaned nodes...');
 
             try {
-                const response = await fetch(`${API_BASE}/api/patterns/orphans`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('hansei_token')}`
-                    }
-                });
+                const response = await fetch(`${API_BASE}/api/patterns/orphans`);
                 
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({}));
@@ -1078,11 +1067,7 @@
             showSuccess('Loading hub analysis...');
 
             try {
-                const response = await fetch(`${API_BASE}/api/patterns/hubs`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('hansei_token')}`
-                    }
-                });
+                const response = await fetch(`${API_BASE}/api/patterns/hubs`);
                 
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({}));
@@ -1232,9 +1217,6 @@
 
                     const response = await fetch(`${API_BASE}/api/voice/ingest`, {
                         method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('hansei_token')}`
-                        },
                         body: formData
                     });
 
@@ -1294,10 +1276,7 @@
             try {
                 const response = await fetch(`${API_BASE}/infer`, {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json', // Corrected Content-Type
-                        'Authorization': `Bearer ${localStorage.getItem('hansei_token')}`
-                    },
+                    headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify({
                         content: text,
                         user_id: USER_ID
@@ -1371,11 +1350,7 @@
             showSuccess('Searching memories...'); // Indicate search is starting
 
             try {
-                const response = await fetch(`${API_BASE}/api/graph?query=${encodeURIComponent(query)}&limit=50&user_id=${USER_ID}`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('hansei_token')}`
-                    }
-                });
+                const response = await fetch(`${API_BASE}/api/graph?query=${encodeURIComponent(query)}&limit=50&user_id=${USER_ID}`);
                 
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({}));

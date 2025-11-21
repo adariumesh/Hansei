@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import ApiGatewayService from './index.js';
 import { processRequest, validateRequest, optimizeProcessing } from './utils.js';
 import { ComponentRequest, Environment } from './interfaces.js';
+import { z } from 'zod'; // Added zod import
 
 // Mock environment
 const mockEnv: Environment = {
@@ -14,8 +15,38 @@ const mockEnv: Environment = {
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn()
-  }
+  },
+  AI: {
+    run: vi.fn(),
+  } as any, // Mock AI
+  MEMORY_CORE: {
+    fetch: vi.fn(),
+  } as any, // Mock MEMORY_CORE
+  AGENT_MEMORY: {
+    searchSemanticMemory: vi.fn(),
+  } as any, // Mock AGENT_MEMORY
+  CHAT_SERVICE: {
+    fetch: vi.fn(),
+  } as any, // Mock CHAT_SERVICE
+  INSIGHTS_SERVICE: {
+    fetch: vi.fn(),
+  } as any, // Mock INSIGHTS_SERVICE
 };
+
+// Mock the schemas used by the API Gateway
+const InferSchema = z.object({
+  user_id: z.string().optional(),
+  content: z.string()
+    .min(1, 'Content cannot be empty')
+    .max(10000, 'Content too long (max 10000 chars)')
+    .trim()
+});
+
+const ChatSchema = z.object({
+  message: z.string().min(1, "Message cannot be empty").max(5000, "Message too long (max 5000 chars)"),
+  conversation_id: z.string().optional(),
+  user_id: z.string().optional()
+});
 
 describe('API Gateway Service', () => {
   let service: ApiGatewayService;
@@ -124,5 +155,90 @@ describe('API Gateway Service', () => {
         expect(optimized.options.optimized).toBe(true);
       });
     });
+  });
+});
+
+// New tests for /health and /infer from audit report
+describe('Health Endpoint', () => {
+  let service: ApiGatewayService;
+
+  beforeEach(() => {
+    service = new ApiGatewayService();
+    vi.clearAllMocks();
+    mockEnv.AGENT_MEMORY.searchSemanticMemory.mockResolvedValue({ success: true, document: [] }); // Mock successful SmartMemory check
+  });
+
+  it('should return 200 OK for /health with healthy dependencies', async () => {
+    const request = new Request('http://localhost/health', {
+      method: 'GET',
+    });
+    const response = await service.fetch(request, mockEnv as any);
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data.status).toBe('ok');
+    expect(data.service).toBe('api-gateway');
+    expect(data.smartmemory).toBe('healthy');
+    expect(data.ai).toBe('available');
+  });
+
+  it('should return 503 if SmartMemory check fails', async () => {
+    mockEnv.AGENT_MEMORY.searchSemanticMemory.mockRejectedValue(new Error('SmartMemory down')); // Mock failed SmartMemory check
+    const request = new Request('http://localhost/health', {
+      method: 'GET',
+    });
+    const response = await service.fetch(request, mockEnv as any);
+    expect(response.status).toBe(503);
+    const data = await response.json();
+    expect(data.status).toBe('degraded');
+    expect(data.smartmemory).toBe('unhealthy');
+  });
+});
+
+describe('Infer Endpoint', () => {
+  let service: ApiGatewayService;
+
+  beforeEach(() => {
+    service = new ApiGatewayService();
+    vi.clearAllMocks();
+    // Mock the AI.run and MEMORY_CORE.fetch for the Infer endpoint
+    mockEnv.AI.run.mockResolvedValue({ embeddings: [{ embedding: [0.1, 0.2] }] }); // Mock AI embedding generation
+    mockEnv.MEMORY_CORE.fetch.mockResolvedValue(new Response(JSON.stringify({ success: true, data: {} }), { status: 200 })); // Mock MEMORY_CORE
+  });
+
+  it('should process a valid /infer request', async () => {
+    const request = new Request('http://localhost/infer', {
+      method: 'POST',
+      body: JSON.stringify({ content: 'Test memory content', user_id: 'test_user' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const response = await service.fetch(request, mockEnv as any);
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data.success).toBe(true);
+    expect(mockEnv.MEMORY_CORE.fetch).toHaveBeenCalled();
+  });
+
+  it('should return 400 for invalid /infer request (missing content)', async () => {
+    const request = new Request('http://localhost/infer', {
+      method: 'POST',
+      body: JSON.stringify({ user_id: 'test_user' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const response = await service.fetch(request, mockEnv as any);
+    expect(response.status).toBe(400);
+    const data = await response.json();
+    expect(data.error).toBe('Validation failed');
+  });
+
+  it('should return 400 for invalid /infer request (content too short)', async () => {
+    const request = new Request('http://localhost/infer', {
+      method: 'POST',
+      body: JSON.stringify({ content: '', user_id: 'test_user' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const response = await service.fetch(request, mockEnv as any);
+    expect(response.status).toBe(400);
+    const data = await response.json();
+    expect(data.error).toBe('Validation failed');
   });
 });
