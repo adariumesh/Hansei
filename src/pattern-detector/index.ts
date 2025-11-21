@@ -1,17 +1,14 @@
 import { Service } from '@liquidmetal-ai/raindrop-framework';
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
-import { Env } from './raindrop.gen';
+import { Env } from './raindrop.gen.js';
 import { processRequest, validateRequest, optimizeProcessing } from './utils.js';
 import { ComponentRequest } from './interfaces.js';
 
-// Create Hono app with middleware
 const app = new Hono<{ Bindings: Env }>();
 
-// Add request logging middleware
 app.use('*', logger());
 
-// Health check endpoint
 app.get('/health', (c) => {
   return c.json({ 
     status: 'ok', 
@@ -20,29 +17,21 @@ app.get('/health', (c) => {
   });
 });
 
-// Pattern detection endpoint
 app.post('/api/detect-patterns', async (c) => {
   try {
     const request = await c.req.json() as ComponentRequest;
 
-    // Create environment adapter
-    const env = {
-      DATABASE: c.env.GRAPH_DATABASE,
-      logger: c.env.logger
-    };
-
-    // Validate request
-    await validateRequest(request);
-
-    // Optimize processing
-    const optimizedRequest = await optimizeProcessing(env, request);
-
-    // Process request
-    const response = await processRequest(env, optimizedRequest);
+    const isValid = await validateRequest(request);
+    if (!isValid) {
+      return c.json({ error: 'Invalid request' }, 400);
+    }
+    
+    const optimizedRequest = await optimizeProcessing(c.env, request);
+    const response = await processRequest(c.env, optimizedRequest);
 
     return c.json(response);
   } catch (error) {
-    c.env.logger.error('Pattern detection failed', { error });
+    (c.env.logger || console).error('Pattern detection failed', { error });
     return c.json({
       error: 'Pattern detection failed',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -50,7 +39,6 @@ app.post('/api/detect-patterns', async (c) => {
   }
 });
 
-// Validate request endpoint
 app.post('/api/validate', async (c) => {
   try {
     const request = await c.req.json() as ComponentRequest;
@@ -58,7 +46,7 @@ app.post('/api/validate', async (c) => {
     
     return c.json({
       valid: isValid,
-      message: 'Request is valid'
+      message: isValid ? 'Request is valid' : 'Request is invalid'
     });
   } catch (error) {
     return c.json({
@@ -68,7 +56,6 @@ app.post('/api/validate', async (c) => {
   }
 });
 
-// Service capabilities endpoint
 app.get('/api/capabilities', (c) => {
   return c.json({
     service: 'pattern-detector',
@@ -77,20 +64,14 @@ app.get('/api/capabilities', (c) => {
       'email_detection',
       'phone_detection', 
       'url_detection',
-      'custom_patterns',
-      'regex_support'
+      'temporal_patterns'
     ],
-    supported_algorithms: ['regex', 'default'],
     max_input_length: 1000000
   });
 });
 
 export default class extends Service<Env> {
-  async fetch(request: Request): Promise<Response> {
-    return app.fetch(request, this.env);
+  async fetch(request: Request, env: Env): Promise<Response> {
+    return app.fetch(request, env);
   }
 }
-
-// Export utility functions for external use
-export { processRequest, validateRequest, optimizeProcessing } from './utils.js';
-export * from './interfaces.js';

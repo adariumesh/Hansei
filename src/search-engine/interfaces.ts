@@ -3,50 +3,8 @@
  */
 import { ComponentRequest, ComponentResponse, SearchResult, SearchOptions } from '../shared/types.js';
 
-// Re-export shared types for backward compatibility
+// Re-export shared types
 export type { ComponentRequest, ComponentResponse };
-
-/**
- * Search query interface with enhanced typing
- */
-export interface SearchQuery {
-  query: string;
-  options?: SearchEngineOptions;
-}
-
-/**
- * Search engine specific options
- */
-export interface SearchEngineOptions extends SearchOptions {
-  searchType?: 'keyword' | 'semantic' | 'hybrid' | 'comprehensive';
-  includeHighlights?: boolean;
-  minScore?: number;
-  maxResults?: number;
-}
-
-/**
- * Enhanced search result for search engine
- */
-export interface EnhancedSearchResult extends SearchResult {
-  highlights?: string[];
-  relevanceFactors?: {
-    keywordMatch: number;
-    semanticSimilarity: number;
-    contextRelevance: number;
-  };
-}
-
-/**
- * Search response with metadata
- */
-export interface SearchResponse {
-  results: EnhancedSearchResult[];
-  total: number;
-  query: string;
-  searchType: string;
-  processingTime?: number;
-  suggestions?: string[];
-}
 
 /**
  * Vector embeddings result

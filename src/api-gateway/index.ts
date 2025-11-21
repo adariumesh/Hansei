@@ -345,7 +345,7 @@ app.post('/infer', async (c) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content, user_id })
     });
-    const response = await c.env.MEMORY_CORE.fetch(newRequest);
+    const response = await c.env.MEMORY_CORE.fetch(newRequest, c.env as any);
     
     const data = await response.json();
     return c.json(data);

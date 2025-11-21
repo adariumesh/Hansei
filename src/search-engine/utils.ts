@@ -1,5 +1,6 @@
 import { Env } from './raindrop.gen.js';
-import { VectorEmbeddings } from './interfaces.js';
+import { VectorEmbeddings, DocumentToIndex, IndexingResult } from './interfaces.js';
+import { ComponentRequest, ComponentResponse } from '../shared/types.js';
 
 export async function generateVectorEmbeddings(env: Env, text: string): Promise<VectorEmbeddings> {
   const embeddingResponse = await env.AI.run('embeddings', { input: [text] });
@@ -25,11 +26,13 @@ export async function semanticSearch(env: Env, query: string, topK: number = 10)
 }
 
 export async function hybridSearch(env: Env, query: string, topK: number = 10) {
+  // For now, hybrid search will just be semantic search
   return semanticSearch(env, query, topK);
 }
 
 export async function performSearch(env: Env, query: string, options?: { limit?: number }) {
   const topK = options?.limit || 10;
+  // For now, comprehensive search will just be semantic search
   const results = await semanticSearch(env, query, topK);
   return {
     results,
@@ -39,22 +42,62 @@ export async function performSearch(env: Env, query: string, options?: { limit?:
   };
 }
 
-export async function indexDocument(document: any) {
-  // Mock indexing pipeline
-  return {
-    indexed: true,
-    document_id: document.id || 'unknown',
-    index_time: new Date().toISOString(),
-    status: 'success'
-  };
+export async function indexDocument(env: Env, document: DocumentToIndex): Promise<IndexingResult> {
+    try {
+        const { embeddings, dimensions } = await generateVectorEmbeddings(env, document.content);
+
+        const docId = document.id || `doc_${Date.now()}`;
+        
+        await env.MEMORY_EMBEDDINGS.upsert([
+            {
+                id: docId,
+                values: embeddings,
+                metadata: {
+                    ...document.metadata,
+                    title: document.title,
+                    content: document.content,
+                    indexedAt: new Date().toISOString()
+                }
+            }
+        ]);
+
+        return {
+            indexed: true,
+            document_id: docId,
+            index_time: new Date().toISOString(),
+            status: 'success'
+        };
+    } catch (error) {
+        console.error('Indexing failed', error);
+        return {
+            indexed: false,
+            document_id: document.id || 'unknown',
+            index_time: new Date().toISOString(),
+            status: 'failed'
+        };
+    }
 }
 
-export async function processRequest(env: any, request: any) {
-    // Placeholder
-    return { status: 'success', result: {} };
+export async function processRequest(env: Env, request: ComponentRequest): Promise<ComponentResponse> {
+    const startTime = Date.now();
+    const searchResults = await performSearch(env, request.input, request.options);
+    const processingTime = Date.now() - startTime;
+
+    return {
+        id: `res_${Date.now()}`,
+        status: 'success',
+        result: searchResults,
+        processing_time_ms: processingTime,
+        metadata: {
+            query: request.input
+        },
+        created_at: new Date().toISOString()
+    };
 }
 
-export async function validateRequest(request: any) {
-    // Placeholder
+export async function validateRequest(request: ComponentRequest): Promise<boolean> {
+    if (!request.input) {
+        return false;
+    }
     return true;
 }
